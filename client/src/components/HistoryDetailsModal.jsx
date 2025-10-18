@@ -5,7 +5,7 @@ export const HistoryDetailsModal = ({ isOpen, onClose, historyItem }) => {
 	if (!isOpen || !historyItem) return null
 
 	const formatDateTime = (dateString) => {
-		return new Date(dateString).toLocaleString("bg-BG", {
+		return new Date(dateString).toLocaleString("mk-MK", {
 			year: "numeric",
 			month: "2-digit",
 			day: "2-digit",
@@ -17,7 +17,7 @@ export const HistoryDetailsModal = ({ isOpen, onClose, historyItem }) => {
 	}
 
 	const formatDetails = (details) => {
-		if (!details) return "Няма детайли"
+		if (!details) return "Нема детали"
 
 		try {
 			const parsed =
@@ -38,7 +38,7 @@ export const HistoryDetailsModal = ({ isOpen, onClose, historyItem }) => {
 				{/* Header */}
 				<div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-200">
 					<h3 className="text-base sm:text-lg font-semibold text-slate-800 font-poppins">
-						Детайли за историята
+						Детали за историјата
 					</h3>
 					<button
 						onClick={onClose}
@@ -69,7 +69,7 @@ export const HistoryDetailsModal = ({ isOpen, onClose, historyItem }) => {
 						<User className="h-5 w-5 text-slate-400 mt-0.5" />
 						<div>
 							<p className="text-md font-medium text-slate-600">
-								Потребител
+								Корисник
 							</p>
 							<p className="text-slate-900">
 								{historyItem.username || "—"}
@@ -82,7 +82,7 @@ export const HistoryDetailsModal = ({ isOpen, onClose, historyItem }) => {
 						<Activity className="h-5 w-5 text-slate-400 mt-0.5" />
 						<div>
 							<p className="text-md font-medium text-slate-600">
-								Действие
+								Акција
 							</p>
 							<p className="text-slate-900">
 								{historyItem.action}
@@ -95,7 +95,7 @@ export const HistoryDetailsModal = ({ isOpen, onClose, historyItem }) => {
 						<Tag className="h-5 w-5 text-slate-400 mt-0.5" />
 						<div>
 							<p className="text-md font-medium text-slate-600">
-								Тип обект
+								Тип на ентитет
 							</p>
 							<p className="text-slate-900">
 								{historyItem.entityType}
@@ -108,7 +108,7 @@ export const HistoryDetailsModal = ({ isOpen, onClose, historyItem }) => {
 						<Tag className="h-5 w-5 text-slate-400 mt-0.5" />
 						<div>
 							<p className="text-md font-medium text-slate-600">
-								ID на обект
+								ID на ентитет
 							</p>
 							<p className="text-slate-900 font-mono text-sm">
 								{historyItem.entityId}
@@ -121,7 +121,7 @@ export const HistoryDetailsModal = ({ isOpen, onClose, historyItem }) => {
 						<FileText className="h-5 w-5 text-slate-400 mt-0.5" />
 						<div className="flex-1">
 							<p className="text-md font-medium text-slate-600">
-								Детайли
+								Детали
 							</p>
 							<div className="mt-1 p-3 bg-slate-50 rounded-lg border">
 								<pre className="text-sm text-slate-900 whitespace-pre-wrap font-mono overflow-x-auto">

@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
 		res.json(employees)
 	} catch (error) {
 		console.error("Error fetching employees:", error)
-		res.status(500).json({ error: "Грешка в сървъра" })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -25,7 +25,7 @@ router.get("/available", async (req, res) => {
 
 		if (!start_time || !end_time) {
 			return res.status(400).json({
-				error: "време за начало и край на услуга са задължителни",
+				error: "Времето за почеток и крај на услугата се задолжителни",
 			})
 		}
 
@@ -45,7 +45,7 @@ router.get("/available", async (req, res) => {
 		res.json(employeesWithAvailability)
 	} catch (error) {
 		console.error("Error checking employee availability:", error)
-		res.status(500).json({ error: "Грешка в сървъра" })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -55,15 +55,13 @@ router.get("/:id", async (req, res) => {
 		const employee = await Employee.findById(req.params.id)
 
 		if (!employee) {
-			return res
-				.status(404)
-				.json({ error: "Този служител не беше намерен" })
+			return res.status(404).json({ error: "Служителот не е пронајден" })
 		}
 
 		res.json(employee)
 	} catch (error) {
 		console.error("Error fetching employee:", error)
-		res.status(500).json({ error: "Грешка в сървъра" })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -75,7 +73,7 @@ router.post("/", async (req, res) => {
 		if (!name || name.trim() === "") {
 			return res
 				.status(400)
-				.json({ error: "Полето за име е задължително" })
+				.json({ error: "Полето за име е задолжително" })
 		}
 
 		const employee = new Employee({ name: name.trim() })
@@ -83,7 +81,7 @@ router.post("/", async (req, res) => {
 
 		try {
 			await logAction(req, {
-				action: "създаване",
+				action: "Креирање",
 				entityType: "служител",
 				entityId: employee._id,
 				details: `име: ${employee.name}`,
@@ -93,7 +91,7 @@ router.post("/", async (req, res) => {
 		res.status(201).json(employee)
 	} catch (error) {
 		console.error("Error creating employee:", error)
-		res.status(500).json({ error: "Грешка в сървъра" })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -105,7 +103,7 @@ router.put("/:id", async (req, res) => {
 
 		if (!name || name.trim() === "" || isHidden === undefined) {
 			return res.status(400).json({
-				error: "Полетата за име и за активност на служителя са задължителни",
+				error: "Полињата за име и за активност на служителот се задолжителни",
 			})
 		}
 
@@ -118,12 +116,12 @@ router.put("/:id", async (req, res) => {
 		)
 
 		if (!employee) {
-			return res.status(404).json({ error: "Служителя не беше намерен" })
+			return res.status(404).json({ error: "Служителот не е пронајден" })
 		}
 
 		try {
 			await logAction(req, {
-				action: "редактиране",
+				action: "Уредување",
 				entityType: "служител",
 				entityId: employee._id,
 				details: `име: ${prevEmployee.name}->${employee.name}`,
@@ -133,7 +131,7 @@ router.put("/:id", async (req, res) => {
 		res.json(employee)
 	} catch (error) {
 		console.error("Error updating employee:", error)
-		res.status(500).json({ error: "Грешка в сървъра" })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -149,7 +147,7 @@ router.delete("/:id", async (req, res) => {
 
 		if (futureBookings > 0) {
 			return res.status(400).json({
-				error: "Не може да се изтрие служител с предстоящи резервации",
+				error: "Не може да се избрише служител со претстојни резервации",
 			})
 		}
 
@@ -160,22 +158,22 @@ router.delete("/:id", async (req, res) => {
 		)
 
 		if (!employee) {
-			return res.status(404).json({ error: "Служителя не е намерен" })
+			return res.status(404).json({ error: "Служителот не е пронајден" })
 		}
 
 		try {
 			await logAction(req, {
-				action: "изтриване",
+				action: "Бришење",
 				entityType: "служител",
 				entityId: employee._id,
 				details: `име: ${employee.name}`,
 			})
 		} catch {}
 
-		res.json({ message: "Служителя е изтрит" })
+		res.json({ message: "Служителот е избришан" })
 	} catch (error) {
 		console.error("Error deleting employee:", error)
-		res.status(500).json({ error: "Грешка в сървъра" })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -191,22 +189,22 @@ router.patch("/:id/restore", async (req, res) => {
 		)
 
 		if (!employee) {
-			return res.status(404).json({ error: "Служителя не е намерен" })
+			return res.status(404).json({ error: "Служителот не е пронајден" })
 		}
 
 		try {
 			await logAction(req, {
-				action: "възстановяване",
+				action: "Враќање",
 				entityType: "служител",
 				entityId: employee._id,
 				details: `име: ${employee.name}`,
 			})
 		} catch {}
 
-		res.json({ message: "Employee restored successfully", employee })
+		res.json({ message: "Служителот е вратен", employee })
 	} catch (error) {
 		console.error("Error restoring employee:", error)
-		res.status(500).json({ error: "Грешка в сървъра" })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 

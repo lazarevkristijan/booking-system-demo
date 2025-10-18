@@ -12,12 +12,12 @@ router.post("/login", async (req, res) => {
 	if (!user)
 		return res
 			.status(401)
-			.json({ error: "Невалидно потребителско име или парола" })
+			.json({ error: "Невалидно корисничко име или лозинка" })
 
 	if (password != user.password)
 		return res
 			.status(401)
-			.json({ error: "Невалидно потребителско име или парола" })
+			.json({ error: "Невалидно корисничко име или лозинка" })
 
 	const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
 		expiresIn: "3d",
@@ -31,15 +31,15 @@ router.post("/login", async (req, res) => {
 		await logAction(
 			{ userId: user._id },
 			{
-				action: "вход",
-				entityType: "система",
+				action: "Најава",
+				entityType: "систем",
 				entityId: user._id,
 				details: {},
 			}
 		)
 	} catch {}
 
-	res.json({ message: "Logged in successfully!" })
+	res.json({ message: "Успешно најавување!" })
 })
 
 router.get("/logout", async (req, res) => {
@@ -48,10 +48,10 @@ router.get("/logout", async (req, res) => {
 			...cookieSettingsNoAge,
 		})
 
-		res.json({ message: "Успешен изход от системата!" })
+		res.json({ message: "Успешна одјава од системот!" })
 	} catch (err) {
-		console.error("Logout eror: " + err)
-		res.status(500).json({ error: "Изхода от системата не беше успешен" })
+		console.error("Logout error: " + err)
+		res.status(500).json({ error: "Одјавата не беше успешна" })
 	}
 })
 
@@ -76,7 +76,7 @@ router.get("/me", async (req, res) => {
 	const token = req.cookies?.token
 
 	if (!token) {
-		return res.status(401).json({ error: "No token provided" })
+		return res.status(401).json({ error: "Не е пренесен токен" })
 	}
 
 	try {
@@ -84,11 +84,11 @@ router.get("/me", async (req, res) => {
 		const user = await User.findById(decoded.id).select("username")
 
 		if (!user) {
-			return res.status(404).json({ error: "User not found" })
+			return res.status(404).json({ error: "Корисникот не е пронајден" })
 		}
 
 		res.json({ username: user.username })
 	} catch (err) {
-		return res.status(401).json({ error: "Invalid token" })
+		return res.status(401).json({ error: "Невалиден токен" })
 	}
 })

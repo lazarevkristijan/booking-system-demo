@@ -40,9 +40,9 @@ export const ClientsPage = () => {
 	})
 
 	const columns = [
-		{ key: "full_name", label: "Име и фамилия", type: "text" },
+		{ key: "full_name", label: "Име и презиме", type: "text" },
 		{ key: "phone", label: "Телефон", type: "phone" },
-		{ key: "notes", label: "Бележки", type: "text" },
+		{ key: "notes", label: "Белешки", type: "text" },
 	]
 
 	const handleAdd = () => {
@@ -65,7 +65,7 @@ export const ClientsPage = () => {
 	const handleDelete = async (client) => {
 		if (
 			window.confirm(
-				`Сигурни ли сте, че искате да изтриете ${client.full_name}?`
+				`Дали сте сигурни дека сакате да го избришете ${client.full_name}?`
 			)
 		) {
 			await deleteClientFromClientsPage(client, clients, setClients)
@@ -105,22 +105,21 @@ export const ClientsPage = () => {
 						Клиенти
 					</h1>
 					<p className="text-slate-600 mt-1 text-sm sm:text-base">
-						Управление на базата данни с клиенти и история на
-						резервациите
+						Управување со базата на клиенти и историја на резервации
 					</p>
 				</div>
 
 				{/* CRUD Table */}
 				<CrudTable
-					title="База данни с клиенти"
+					title="База на клиенти"
 					data={clients}
 					columns={columns}
 					onAdd={handleAdd}
 					onEdit={handleEdit}
 					onDelete={handleDelete}
 					onView={handleViewHistory}
-					searchPlaceholder="Търсене на клиенти..."
-					addButtonText="Добави клиент"
+					searchPlaceholder="Пребарување на клиенти..."
+					addButtonText="Додади клиент"
 				/>
 
 				{/* Add/Edit Modal */}
@@ -138,8 +137,8 @@ export const ClientsPage = () => {
 									<div className="px-4 sm:px-6 py-4 border-b border-slate-200">
 										<h3 className="text-base sm:text-lg font-semibold text-slate-800 font-poppins">
 											{selectedClient
-												? "Редактирай клиент"
-												: "Добави нов клиент"}
+												? "Уреди клиент"
+												: "Додади нов клиент"}
 										</h3>
 									</div>
 
@@ -147,7 +146,7 @@ export const ClientsPage = () => {
 									<div className="px-4 sm:px-6 py-6 space-y-4">
 										<div>
 											<label className="block text-sm font-medium text-slate-700 mb-2">
-												Име и фамилия *
+												Име и презиме *
 											</label>
 											<input
 												type="text"
@@ -161,13 +160,13 @@ export const ClientsPage = () => {
 													})
 												}
 												className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent touch-manipulation"
-												placeholder="Въведете име и фамилия на клиента"
+												placeholder="Внесете име и презиме на клиентот"
 											/>
 										</div>
 
 										<div>
 											<label className="block text-sm font-medium text-slate-700 mb-2">
-												Телефонен номер *
+												Телефонски број *
 											</label>
 											<input
 												type="tel"
@@ -180,13 +179,13 @@ export const ClientsPage = () => {
 													})
 												}
 												className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent touch-manipulation"
-												placeholder="Въведете телефонен номер"
+												placeholder="Внесете телефонски број"
 											/>
 										</div>
 
 										<div>
 											<label className="block text-sm font-medium text-slate-700 mb-2">
-												Бележки
+												Белешки
 											</label>
 											<textarea
 												type="text"
@@ -214,15 +213,15 @@ export const ClientsPage = () => {
 											onClick={() => setShowModal(false)}
 											className="px-4 py-3 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 touch-manipulation min-h-[44px]"
 										>
-											Отказ
+											Откажи
 										</button>
 										<button
 											type="submit"
 											className="px-6 py-3 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 touch-manipulation min-h-[44px]"
 										>
 											{selectedClient
-												? "Обнови"
-												: "Създай"}{" "}
+												? "Ажурирај"
+												: "Креирај"}{" "}
 											клиент
 										</button>
 									</div>
@@ -246,7 +245,7 @@ export const ClientsPage = () => {
 								<div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-200">
 									<div className="min-w-0 flex-1 mr-4">
 										<h3 className="text-base sm:text-lg font-semibold text-slate-800 font-poppins">
-											История на резервациите
+											Историја на резервации
 										</h3>
 										<p className="text-xs sm:text-sm text-slate-600 mt-1 truncate">
 											{selectedClient.full_name} •{" "}
@@ -276,7 +275,7 @@ export const ClientsPage = () => {
 												}
 											</div>
 											<div className="text-xs sm:text-sm text-slate-600">
-												Общо посещения
+												Вкупно посети
 											</div>
 										</div>
 										<div className="text-center">
@@ -284,10 +283,10 @@ export const ClientsPage = () => {
 												{getTotalSpent(
 													selectedClient._id
 												).toFixed(2)}{" "}
-												лв.
+												ден.
 											</div>
 											<div className="text-xs sm:text-sm text-slate-600">
-												Общо похарчено
+												Вкупно потрошено
 											</div>
 										</div>
 									</div>
@@ -298,7 +297,7 @@ export const ClientsPage = () => {
 										<div className="flex items-start">
 											<div className="ml-3 flex-1">
 												<h4 className="text-sm font-medium text-blue-800 mb-1">
-													Бележки за клиента
+													Белешки за клиентот
 												</h4>
 												<p className="text-sm text-blue-700 whitespace-pre-wrap">
 													{selectedClient.notes}
@@ -317,7 +316,7 @@ export const ClientsPage = () => {
 										<div className="text-center py-8">
 											<Calendar className="h-12 w-12 text-slate-300 mx-auto mb-4" />
 											<p className="text-slate-500 text-sm">
-												Няма история на резервации
+												Нема историја на резервации
 											</p>
 										</div>
 									) : (
@@ -378,7 +377,7 @@ export const ClientsPage = () => {
 															{booking.price.toFixed(
 																2
 															)}{" "}
-															лв.
+															ден.
 														</div>
 													</div>
 												</div>

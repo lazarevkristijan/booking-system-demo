@@ -1,9 +1,3 @@
-/**
- * @description This file defines the main dashboard page for the hairstylist booking platform.
- * It displays a beautiful calendar interface with existing bookings and provides functionality to add new bookings.
- * The component includes BookingModal integration for creating appointments and handles calendar navigation.
- * Key variables include selectedDate for calendar state, showBookingModal for modal visibility, and bookings for appointment data.
- */
 import { useState } from "react"
 import { Calendar, Plus, ChevronLeft, ChevronRight, Clock } from "lucide-react"
 import { BookingModal } from "../components/BookingModal"
@@ -169,14 +163,14 @@ export const DashboardPage = () => {
 								Табло
 							</h1>
 							<p className="text-slate-600 mt-1 text-sm sm:text-base">
-								Управление на вашите часове и резервации
+								Управување со вашите термини и резервации
 							</p>
 							<button
 								onClick={() => setViewMode("month")}
 								className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors touch-manipulation min-h-[44px] mt-2"
 							>
 								<Calendar className="h-5 w-5 mr-2" />
-								Месечен изглед
+								Месечен приказ
 							</button>
 						</div>
 					</div>
@@ -207,7 +201,7 @@ export const DashboardPage = () => {
 										<h2 className="text-lg sm:text-xl font-semibold text-slate-800 font-poppins">
 											{capitalize(
 												selectedDate.toLocaleDateString(
-													"bg-BG",
+													"mk-MK",
 													{
 														month: "long",
 														year: "numeric",
@@ -235,13 +229,13 @@ export const DashboardPage = () => {
 									{/* Weekday headers */}
 									<div className="grid grid-cols-7 border-b border-slate-200 text-center font-medium text-slate-500 mb-2">
 										{[
-											"Пн",
-											"Вт",
-											"Ср",
-											"Чт",
-											"Пт",
-											"Сб",
-											"Нд",
+											"Пон",
+											"Вто",
+											"Сре",
+											"Чет",
+											"Пет",
+											"Саб",
+											"Нед",
 										].map((d) => (
 											<div
 												key={d}
@@ -343,8 +337,8 @@ export const DashboardPage = () => {
 						<>
 							<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 sm:px-6 py-4 border-b border-slate-200">
 								<h2 className="text-lg sm:text-xl font-semibold text-slate-800 font-poppins truncate">
-									Седмица на{" "}
-									{weekDays[0].toLocaleDateString("bg-BG", {
+									Недела на{" "}
+									{weekDays[0].toLocaleDateString("mk-MK", {
 										month: "long",
 										day: "numeric",
 										year: "numeric",
@@ -363,7 +357,7 @@ export const DashboardPage = () => {
 										}
 										className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors touch-manipulation min-h-[44px]"
 									>
-										Днес
+										Денес
 									</button>
 									<button
 										onClick={() => navigateWeek(1)}
@@ -389,7 +383,7 @@ export const DashboardPage = () => {
 											>
 												<div className="text-xs sm:text-sm font-medium text-slate-500">
 													{day.toLocaleDateString(
-														"bg-BG",
+														"mk-MK",
 														{
 															weekday: "short",
 														}
@@ -521,7 +515,7 @@ export const DashboardPage = () => {
 																			>
 																				<Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
 																				Нов
-																				час
+																				термин
 																			</button>
 																		</div>{" "}
 																	</div>
@@ -554,7 +548,7 @@ export const DashboardPage = () => {
 								<h2 className="text-lg sm:text-xl font-semibold text-slate-800">
 									{capitalize(
 										selectedDate.toLocaleDateString(
-											"bg-BG",
+											"mk-MK",
 											{
 												weekday: "long",
 												day: "numeric",
@@ -577,7 +571,7 @@ export const DashboardPage = () => {
 										}
 										className="px-3 py-2 text-sm hover:bg-slate-100 rounded-lg transition-colors"
 									>
-										Днес
+										Денес
 									</button>
 									<button
 										onClick={() => navigateDay(1)}
@@ -738,7 +732,7 @@ export const DashboardPage = () => {
 						</div>
 						<div className="ml-3 sm:ml-4 min-w-0">
 							<p className="text-xs sm:text-sm font-medium text-slate-500 truncate">
-								Днешни Резервации
+								Денешни Резервации
 							</p>
 							<p className="text-xl sm:text-2xl font-bold text-slate-800">
 								{
@@ -764,7 +758,7 @@ export const DashboardPage = () => {
 						</div>
 						<div className="ml-3 sm:ml-4 min-w-0">
 							<p className="text-xs sm:text-sm font-medium text-slate-500 truncate">
-								Този месец
+								Овој месец
 							</p>
 							<p className="text-xl sm:text-2xl font-bold text-slate-800">
 								{bookings.length > 0
@@ -776,7 +770,7 @@ export const DashboardPage = () => {
 											)
 											.toFixed(2)
 									: 0}{" "}
-								лв.
+								ден.
 							</p>
 						</div>
 					</div>
@@ -787,9 +781,9 @@ export const DashboardPage = () => {
 				onChange={(e) => setViewMode(e.target.value)}
 				className="px-3 py-2 border border-slate-300 rounded-lg"
 			>
-				<option value="day">Дневен изглед</option>
-				<option value="week">Седмичен изглед</option>
-				<option value="month">Месечен изглед</option>
+				<option value="day">Дневен приказ</option>
+				<option value="week">Неделен приказ</option>
+				<option value="month">Месечен приказ</option>
 			</select>
 
 			{/* Booking Modal */}

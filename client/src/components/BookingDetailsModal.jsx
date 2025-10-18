@@ -43,15 +43,15 @@ export const BookingDetailsModal = ({
 					<div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-200">
 						<div className="min-w-0 flex-1 mr-4">
 							<h3 className="text-base sm:text-lg font-semibold text-slate-800 font-poppins truncate">
-								Детайли за резервацията
+								Детали за резервацијата
 							</h3>
 							<p className="text-xs sm:text-sm text-slate-600 mt-1 truncate">
 								{new Date(booking.startTime).toLocaleString(
-									"bg-BG"
+									"mk-MK"
 								)}{" "}
 								-{" "}
 								{new Date(booking.endTime).toLocaleTimeString(
-									"bg-BG"
+									"mk-MK"
 								)}
 							</p>
 						</div>
@@ -81,7 +81,7 @@ export const BookingDetailsModal = ({
 							</p>
 							<p>
 								<span className="font-medium text-slate-700">
-									Служител:{" "}
+									Вработен:{" "}
 								</span>
 								{booking.employee?.name || "—"}
 							</p>
@@ -95,7 +95,7 @@ export const BookingDetailsModal = ({
 							</p>
 							<p>
 								<span className="font-medium text-slate-700">
-									Общо време:{" "}
+									Вкупно време:{" "}
 								</span>
 								{booking.services
 									.map((s) => s.duration)
@@ -108,7 +108,7 @@ export const BookingDetailsModal = ({
 								<span className="font-medium text-slate-700">
 									Цена:{" "}
 								</span>
-								{booking.price.toFixed(2)} лв.
+								{booking.price.toFixed(2)} ден.
 							</p>
 							{booking.notes && (
 								<div>
@@ -116,7 +116,7 @@ export const BookingDetailsModal = ({
 										<StickyNote className="w-4 h-4 text-blue-500 mt-1" />
 										<div>
 											<p className="text-sm font-medium text-slate-700">
-												Бележка за резервацията:
+												Белешка за резервацијата:
 											</p>
 											<p className="text-slate-700 text-sm">
 												{booking.notes}
@@ -131,7 +131,7 @@ export const BookingDetailsModal = ({
 									<User className="w-4 h-4 text-amber-500 mt-1" />
 									<div>
 										<p className="text-sm font-medium text-slate-700">
-											Бележка за клиента:
+											Белешка за клиентот:
 										</p>
 										<p className="text-slate-700 text-sm">
 											{booking.client.notes}
@@ -152,7 +152,7 @@ export const BookingDetailsModal = ({
 									(ch) => ch.id !== booking._id
 								).length === 0 ? (
 									<p className="text-slate-500 text-sm">
-										Няма предишни резервации
+										Нема претходни резервации
 									</p>
 								) : (
 									<div className="space-y-3">
@@ -180,7 +180,7 @@ export const BookingDetailsModal = ({
 															{new Date(
 																b.start_time
 															).toLocaleDateString(
-																"bg-BG"
+																"mk-MK"
 															)}{" "}
 															•{" "}
 															{b.employee?.name ||
@@ -194,7 +194,8 @@ export const BookingDetailsModal = ({
 														)}
 													</div>
 													<div className="text-right flex-shrink-0 text-sm font-semibold text-slate-800">
-														{b.price.toFixed(2)} лв.
+														{b.price.toFixed(2)}{" "}
+														ден.
 													</div>
 												</div>
 											))}

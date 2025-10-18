@@ -22,7 +22,7 @@ router.get("/", async (req, res) => {
 		res.json(services)
 	} catch (error) {
 		console.error("Error fetching services:", error)
-		res.status(500).json({ error: "Грешка в сървъра" })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -32,13 +32,13 @@ router.get("/:id", async (req, res) => {
 		const service = await Service.findById(req.params.id)
 
 		if (!service) {
-			return res.status(404).json({ error: "Услугата не е намерена" })
+			return res.status(404).json({ error: "Услугата не е пронајдена" })
 		}
 
 		res.json(service)
 	} catch (error) {
 		console.error("Error fetching service:", error)
-		res.status(500).json({ error: "Грешка в сървъра" })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -51,17 +51,17 @@ router.post("/", async (req, res) => {
 		if (!name || name.trim() === "") {
 			return res
 				.status(400)
-				.json({ error: "Полето за име е задължително" })
+				.json({ error: "Полето за име е задолжително" })
 		}
 		if (duration == null || isNaN(duration) || duration <= 0) {
 			return res.status(400).json({
-				error: "Продължителност трябва да бъде истинско число в минути",
+				error: "Времетраењето треба да биде број во минути",
 			})
 		}
 		if (price == null || isNaN(price) || price < 0) {
 			return res
 				.status(400)
-				.json({ error: "Цената трябва да бъде истинско число в лв." })
+				.json({ error: "Цената треба да биде број во денари" })
 		}
 
 		const service = new Service({
@@ -74,17 +74,17 @@ router.post("/", async (req, res) => {
 
 		try {
 			await logAction(req, {
-				action: "създаване",
+				action: "Креирање",
 				entityType: "услуга",
 				entityId: service._id,
-				details: `услуга: ${service.name}, цена: ${service.price}лв, време: ${service.duration}мин`,
+				details: `услуга: ${service.name}, цена: ${service.price}ден, време: ${service.duration}мин`,
 			})
 		} catch {}
 
 		res.status(201).json(service)
 	} catch (error) {
 		console.error("Error creating service:", error)
-		res.status(500).json({ error: "Грешка в сървъра" })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -97,18 +97,18 @@ router.put("/:id", async (req, res) => {
 		// Validation
 		if (!name || name.trim() === "" || isHidden === undefined) {
 			return res.status(400).json({
-				error: "Полетата за име и за активност на услугата са задължителни",
+				error: "Полињата за име и за активност на услугата се задолжителни",
 			})
 		}
 		if (duration == null || isNaN(duration) || duration <= 0) {
 			return res.status(400).json({
-				error: "Продължителност трябва да бъде число и поне 1 мин.",
+				error: "Времетраењето треба да биде број и најмалку 1 мин.",
 			})
 		}
 		if (price == null || isNaN(price) || price < 0) {
 			return res
 				.status(400)
-				.json({ error: "Цената трябва да бъде число и поне 1 лв." })
+				.json({ error: "Цената треба да биде број и најмалку 1 ден." })
 		}
 
 		const prevService = await Service.findById(id)
@@ -125,22 +125,22 @@ router.put("/:id", async (req, res) => {
 		)
 
 		if (!service) {
-			return res.status(404).json({ error: "Усугата не е намерена" })
+			return res.status(404).json({ error: "Услугата не е пронајдена" })
 		}
 
 		try {
 			await logAction(req, {
-				action: "редактиране",
+				action: "Уредување",
 				entityType: "услуга",
 				entityId: service._id,
-				details: `име: ${prevService.name}->${service.name}, цена: ${prevService.price}->${service.price}лв, време: ${prevService.duration}->${service.duration}мин`,
+				details: `име: ${prevService.name}->${service.name}, цена: ${prevService.price}->${service.price}ден, време: ${prevService.duration}->${service.duration}мин`,
 			})
 		} catch {}
 
 		res.json(service)
 	} catch (error) {
 		console.error("Error updating service:", error)
-		res.status(500).json({ error: "Грешка в сървъра" })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -157,7 +157,7 @@ router.delete("/:id", async (req, res) => {
 
 		if (activeBookings > 0) {
 			return res.status(400).json({
-				error: "Не може да се изтрие услуга с предстоящи резервации",
+				error: "Не може да се избрише услуга со претстојни резервации",
 			})
 		}
 
@@ -168,22 +168,22 @@ router.delete("/:id", async (req, res) => {
 		)
 
 		if (!service) {
-			return res.status(404).json({ error: "Услугата не е намерена" })
+			return res.status(404).json({ error: "Услугата не е пронајдена" })
 		}
 
 		try {
 			await logAction(req, {
-				action: "изтриване",
+				action: "Бришење",
 				entityType: "услуга",
 				entityId: id,
 				details: service.name,
 			})
 		} catch {}
 
-		res.json({ message: "Услугата е изтрита" })
+		res.json({ message: "Услугата е избришана" })
 	} catch (error) {
 		console.error("Error deleting service:", error)
-		res.status(500).json({ error: "Грешка в сървъра" })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -199,22 +199,22 @@ router.patch("/:id/restore", async (req, res) => {
 		)
 
 		if (!service) {
-			return res.status(404).json({ error: "Услугата не е намерена" })
+			return res.status(404).json({ error: "Услугата не е пронајдена" })
 		}
 
 		try {
 			await logAction(req, {
-				action: "възстановяване",
+				action: "Враќање",
 				entityType: "услуга",
 				entityId: id,
 				details: service.name,
 			})
 		} catch {}
 
-		res.json({ message: "Услугата е възстановена: ", service })
+		res.json({ message: "Услугата е вратена: ", service })
 	} catch (error) {
 		console.error("Error restoring service:", error)
-		res.status(500).json({ error: "Грешка в сървъра" })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 

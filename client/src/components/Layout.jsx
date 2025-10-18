@@ -1,10 +1,3 @@
-/**
- * @description This file defines the main layout component for the hairstylist booking platform.
- * It provides a responsive sidebar navigation with the company logo, main navigation links, and a sticky footer.
- * The layout includes navigation for Dashboard, Employees, Services, and Clients sections with proper routing.
- * Key variables include isMenuOpen for mobile menu state and navigation items array for dynamic menu rendering.
- */
-
 import { useEffect, useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { Menu, X, LogOut, User, History } from "lucide-react"
@@ -107,7 +100,7 @@ export const Layout = ({ children, onLogout }) => {
 									onClick={() => setIsMenuOpen(false)}
 								>
 									<History className="h-5 w-5 mr-2" />
-									История
+									Историја
 								</Link>
 							)}
 
@@ -119,14 +112,14 @@ export const Layout = ({ children, onLogout }) => {
 								}}
 							>
 								<LogOut className="h-5 w-5 mr-2" />
-								Изход
+								Одјава
 							</button>
 
 							<div
 								className={`flex items-center px-4 py-3 rounded-lg font-medium text-base transition-colors text-slate-600 bg-slate-50 border border-slate-200`}
 							>
 								<User className="h-5 w-5 mr-2" />
-								Потребител: {currentUsername || "Зареждане..."}
+								Корисник: {currentUsername || "Вчитување..."}
 							</div>
 						</nav>
 					</div>
@@ -168,7 +161,7 @@ export const Layout = ({ children, onLogout }) => {
 							className={`flex items-center px-4 py-3 rounded-lg font-medium text-base transition-colors text-slate-600 bg-slate-50 border border-slate-200`}
 						>
 							<User className="h-5 w-5 mr-2" />
-							Потребител: {currentUsername || "Зареждане..."}
+							Корисник: {currentUsername || "Вчитување..."}
 						</div>
 						{currentUsername === "admin" && (
 							<Link
@@ -180,7 +173,7 @@ export const Layout = ({ children, onLogout }) => {
 								}`}
 							>
 								<History className="h-5 w-5 mr-2" />
-								История
+								Историја
 							</Link>
 						)}
 					</nav>
@@ -190,7 +183,7 @@ export const Layout = ({ children, onLogout }) => {
 							onClick={handleLogout}
 						>
 							<LogOut className="h-5 w-5 mr-2" />
-							Изход
+							Одјава
 						</button>
 					</div>
 				</aside>

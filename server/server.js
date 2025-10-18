@@ -26,7 +26,7 @@ app.use("/api", routes)
 // 404 handler
 app.use("*", authMiddleWare, (req, res) => {
 	res.status(404).json({
-		error: "Този линк не съществува",
+		error: "Тој линк не постои",
 		path: req.originalUrl,
 		method: req.method,
 	})

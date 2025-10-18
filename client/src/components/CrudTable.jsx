@@ -1,9 +1,3 @@
-/**
- * @description This file defines a reusable CRUD table component for managing data across the platform.
- * It provides a beautiful, responsive table with Add/Edit/Delete functionality, search capabilities, and pagination.
- * The component handles different data types and displays them appropriately with action buttons for each row.
- * Key variables include data for table content, columns for structure, and onAdd/onEdit/onDelete for CRUD operations.
- */
 import React, { useEffect, useState } from "react"
 import { Plus, Edit, Trash2, Search, Eye } from "lucide-react"
 
@@ -15,8 +9,8 @@ export const CrudTable = ({
 	onEdit,
 	onDelete,
 	onView,
-	searchPlaceholder = "Търсене...",
-	addButtonText = "Добави Нов",
+	searchPlaceholder = "Пребарување...",
+	addButtonText = "Додади Нов",
 }) => {
 	const [searchTerm, setSearchTerm] = useState("")
 	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm)
@@ -48,13 +42,13 @@ export const CrudTable = ({
 
 		switch (type) {
 			case "currency":
-				return `${parseFloat(value).toFixed(2)} лв.`
+				return `${parseFloat(value).toFixed(2)} ден.`
 			case "phone":
 				return value
 			case "date":
 				return new Date(value).toLocaleDateString()
 			case "datetime":
-				return new Date(value).toLocaleString("bg-BG", {
+				return new Date(value).toLocaleString("mk-MK", {
 					hour12: false,
 				})
 			default:
@@ -100,8 +94,8 @@ export const CrudTable = ({
 					<div className="px-4 sm:px-6 py-12 text-center">
 						<div className="text-slate-400 text-sm">
 							{searchTerm
-								? "Няма намерени резултати"
-								: "Няма налични данни"}
+								? "Нема пронајдени резултати"
+								: "Нема достапни податоци"}
 						</div>
 						{!searchTerm && (
 							<button
@@ -126,7 +120,7 @@ export const CrudTable = ({
 									</th>
 								))}
 								<th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
-									Действия
+									Акции
 								</th>
 							</tr>
 						</thead>
@@ -158,7 +152,7 @@ export const CrudTable = ({
 												<button
 													onClick={() => onView(item)}
 													className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors touch-manipulation"
-													title="Виж Детайли"
+													title="Види Детали"
 												>
 													<Eye className="h-4 w-4" />
 												</button>
@@ -167,7 +161,7 @@ export const CrudTable = ({
 												<button
 													onClick={() => onEdit(item)}
 													className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors touch-manipulation"
-													title="Редактирай"
+													title="Уреди"
 												>
 													<Edit className="h-4 w-4" />
 												</button>
@@ -178,7 +172,7 @@ export const CrudTable = ({
 														onDelete(item)
 													}
 													className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors touch-manipulation"
-													title="Изтрий"
+													title="Избриши"
 												>
 													<Trash2 className="h-4 w-4" />
 												</button>

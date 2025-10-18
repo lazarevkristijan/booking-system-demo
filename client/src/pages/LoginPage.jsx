@@ -1,10 +1,3 @@
-/**
- * @description This file defines the login page component for the hairstylist booking platform.
- * It provides username and password authentication with session management stored in localStorage for one week.
- * The component includes form validation, error handling, and automatic redirect to dashboard upon successful login.
- * Key variables include username and password form state, error messages, and loading states for user feedback.
- */
-
 import { useState } from "react"
 import { Navigate } from "react-router-dom"
 import { Eye, EyeOff, LogIn } from "lucide-react"
@@ -37,7 +30,7 @@ const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
 				.catch((e) => setError(e.response.data.error))
 		} catch (e) {
 			console.error(e)
-			setError("Грешно потребителско име или парола")
+			setError("Погрешно корисничко име или лозинка")
 		} finally {
 			setLoading(false)
 		}
@@ -57,10 +50,10 @@ const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
 			<div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
 				<div className="mb-8 text-center">
 					<h1 className="text-2xl font-bold text-slate-800 font-poppins mb-2">
-						Вход в системата
+						Најава во системот
 					</h1>
 					<p className="text-slate-600 text-sm">
-						Моля, въведете вашите данни за достъп
+						Внесете ги вашите податоци за пристап
 					</p>
 				</div>
 				<form
@@ -69,7 +62,7 @@ const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
 				>
 					<div>
 						<label className="block text-sm font-medium text-slate-700 mb-2">
-							Потребителско име
+							Корисничко име
 						</label>
 						<input
 							type="text"
@@ -83,7 +76,7 @@ const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
 					</div>
 					<div>
 						<label className="block text-sm font-medium text-slate-700 mb-2">
-							Парола
+							Лозинка
 						</label>
 						<div className="relative">
 							<input
@@ -102,8 +95,8 @@ const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
 								onClick={() => setShowPassword((v) => !v)}
 								aria-label={
 									showPassword
-										? "Скрий паролата"
-										: "Покажи паролата"
+										? "Сокриј ја лозинката"
+										: "Прикажи ја лозинката"
 								}
 							>
 								{showPassword ? (
@@ -125,7 +118,7 @@ const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
 						className="w-full flex items-center justify-center px-6 py-3 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors min-h-[44px] disabled:opacity-50"
 					>
 						<LogIn className="h-5 w-5 mr-2" />
-						{loading ? "Влизане..." : "Вход"}
+						{loading ? "Најавување..." : "Најава"}
 					</button>
 				</form>
 				<div className="mt-8 text-center text-xs text-slate-400">

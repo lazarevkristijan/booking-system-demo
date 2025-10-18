@@ -1,9 +1,3 @@
-/**
- * @description This file defines the employees management page for the hairstylist booking platform.
- * It provides a comprehensive interface for viewing, adding, editing, and deleting employee records.
- * The component uses the CrudTable component for data display and includes modal functionality for CRUD operations.
- * Key variables include employees for data storage, showModal for form visibility, and selectedEmployee for edit operations.
- */
 import { useEffect, useState } from "react"
 import { CrudTable } from "../components/CrudTable"
 import { useQuery } from "@tanstack/react-query"
@@ -32,7 +26,7 @@ export const EmployeesPage = () => {
 	const [selectedEmployee, setSelectedEmployee] = useState(null)
 	const [formData, setFormData] = useState({ name: "" })
 
-	const columns = [{ key: "name", label: "Име и Фамилия", type: "text" }]
+	const columns = [{ key: "name", label: "Име и Презиме", type: "text" }]
 
 	const handleAdd = () => {
 		setSelectedEmployee(null)
@@ -52,7 +46,7 @@ export const EmployeesPage = () => {
 	const handleDelete = async (employee) => {
 		if (
 			window.confirm(
-				`Сигурни ли сте, че искате да изтриете служителя ${employee.name}?`
+				`Дали сте сигурни дека сакате да го избришете вработениот ${employee.name}?`
 			)
 		) {
 			await deleteEmploeeFromPage(employee, employees, setEmployees)
@@ -84,10 +78,10 @@ export const EmployeesPage = () => {
 				{/* Header */}
 				<div className="mb-6 sm:mb-8">
 					<h1 className="text-2xl sm:text-3xl font-bold text-slate-800 font-poppins">
-						Служители
+						Вработени
 					</h1>
 					<p className="text-slate-600 mt-1 text-sm sm:text-base">
-						Управление на фризьорския персонал
+						Управување со фризерскиот персонал
 					</p>
 				</div>
 
@@ -99,8 +93,8 @@ export const EmployeesPage = () => {
 					onAdd={handleAdd}
 					onEdit={handleEdit}
 					onDelete={handleDelete}
-					searchPlaceholder="Търсене на служители..."
-					addButtonText="Добави Служител"
+					searchPlaceholder="Пребарување на вработени..."
+					addButtonText="Додади Вработен"
 				/>
 
 				{/* Modal */}
@@ -118,8 +112,8 @@ export const EmployeesPage = () => {
 									<div className="px-4 sm:px-6 py-4 border-b border-slate-200">
 										<h3 className="text-base sm:text-lg font-semibold text-slate-800 font-poppins">
 											{selectedEmployee
-												? "Редактирай Служител"
-												: "Добави Нов Служител"}
+												? "Уреди Вработен"
+												: "Додади Нов Вработен"}
 										</h3>
 									</div>
 
@@ -127,7 +121,7 @@ export const EmployeesPage = () => {
 									<div className="px-4 sm:px-6 py-6">
 										<div>
 											<label className="block text-sm font-medium text-slate-700 mb-2">
-												Име и Фамилия *
+												Име и Презиме *
 											</label>
 											<input
 												type="text"
@@ -140,7 +134,7 @@ export const EmployeesPage = () => {
 													})
 												}
 												className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent touch-manipulation"
-												placeholder="Въведете име и фамилия на служител"
+												placeholder="Внесете име и презиме на вработениот"
 											/>
 										</div>
 									</div>
@@ -152,16 +146,16 @@ export const EmployeesPage = () => {
 											onClick={() => setShowModal(false)}
 											className="px-4 py-3 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 touch-manipulation min-h-[44px]"
 										>
-											Отказ
+											Откажи
 										</button>
 										<button
 											type="submit"
 											className="px-6 py-3 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 touch-manipulation min-h-[44px]"
 										>
 											{selectedEmployee
-												? "Обнови"
-												: "Създай"}{" "}
-											Служител
+												? "Ажурирај"
+												: "Креирај"}{" "}
+											Вработен
 										</button>
 									</div>
 								</form>

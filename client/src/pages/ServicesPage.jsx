@@ -1,9 +1,3 @@
-/**
- * @description This file defines the services management page for the hairstylist booking platform.
- * It provides a comprehensive interface for viewing, adding, editing, and deleting service records with pricing and duration.
- * The component uses the CrudTable component for data display and includes modal functionality for CRUD operations.
- * Key variables include services for data storage, showModal for form visibility, and selectedService for edit operations.
- */
 import { useState } from "react"
 import { CrudTable } from "../components/CrudTable"
 import axios from "axios"
@@ -39,7 +33,7 @@ export const ServicesPage = () => {
 
 	const columns = [
 		{ key: "name", label: "Име на услугата", type: "text" },
-		{ key: "duration", label: "Продълж.", type: "text" },
+		{ key: "duration", label: "Траење", type: "text" },
 		{ key: "price", label: "Цена", type: "currency" },
 	]
 
@@ -63,7 +57,7 @@ export const ServicesPage = () => {
 	const handleDelete = async (service) => {
 		if (
 			window.confirm(
-				`Сигурни ли сте, че искате да изтриете ${service.name}?`
+				`Дали сте сигурни дека сакате да ја избришете ${service.name}?`
 			)
 		) {
 			await deleteServiceFrompage(service, services, setServices)
@@ -98,7 +92,7 @@ export const ServicesPage = () => {
 						Услуги
 					</h1>
 					<p className="text-slate-600 mt-1 text-sm sm:text-base">
-						Управление на услугите, цените и продължителността
+						Управување со услугите, цените и времетраењето
 					</p>
 				</div>
 
@@ -110,8 +104,8 @@ export const ServicesPage = () => {
 					onAdd={handleAdd}
 					onEdit={handleEdit}
 					onDelete={handleDelete}
-					searchPlaceholder="Търсене на услуги..."
-					addButtonText="Добави услуга"
+					searchPlaceholder="Пребарување на услуги..."
+					addButtonText="Додади услуга"
 				/>
 
 				{/* Modal */}
@@ -129,8 +123,8 @@ export const ServicesPage = () => {
 									<div className="px-4 sm:px-6 py-4 border-b border-slate-200">
 										<h3 className="text-base sm:text-lg font-semibold text-slate-800 font-poppins">
 											{selectedService
-												? "Редактирай услуга"
-												: "Добави нова услуга"}
+												? "Уреди услуга"
+												: "Додади нова услуга"}
 										</h3>
 									</div>
 
@@ -151,13 +145,13 @@ export const ServicesPage = () => {
 													})
 												}
 												className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent touch-manipulation"
-												placeholder="Въведете име на услугата"
+												placeholder="Внесете име на услугата"
 											/>
 										</div>
 
 										<div>
 											<label className="block text-sm font-medium text-slate-700 mb-2">
-												Продължителност (минути) *
+												Траење (минути) *
 											</label>
 											<input
 												type="number"
@@ -178,7 +172,7 @@ export const ServicesPage = () => {
 
 										<div>
 											<label className="block text-sm font-medium text-slate-700 mb-2">
-												Цена (лв.) *
+												Цена (ден.) *
 											</label>
 											<input
 												type="number"
@@ -205,15 +199,15 @@ export const ServicesPage = () => {
 											onClick={() => setShowModal(false)}
 											className="px-4 py-3 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 touch-manipulation min-h-[44px]"
 										>
-											Отказ
+											Откажи
 										</button>
 										<button
 											type="submit"
 											className="px-6 py-3 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 touch-manipulation min-h-[44px]"
 										>
 											{selectedService
-												? "Обнови"
-												: "Създай"}{" "}
+												? "Ажурирај"
+												: "Креирај"}{" "}
 											услуга
 										</button>
 									</div>

@@ -4,10 +4,10 @@ export const ConfirmModal = ({
 	isOpen,
 	onClose,
 	onConfirm,
-	title = "Сигурни ли сте?",
-	message = "Наистина ли искате да изтриете този елемент? Това действие е необратимо.",
-	confirmText = "Да, изтрий",
-	cancelText = "Отказ",
+	title = "Дали сте сигурни?",
+	message = "Навистина ли сакате да го избришете овој елемент? Оваа акција е неповратна.",
+	confirmText = "Да, избриши",
+	cancelText = "Откажи",
 }) => {
 	if (!isOpen) return null
 

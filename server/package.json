@@ -1,5 +1,5 @@
 {
-	"name": "hair-salon-backend",
+	"name": "booking-system-demo-backend",
 	"version": "1.0.0",
 	"description": "Node.js backend for hair salon booking platform",
 	"main": "server.js",

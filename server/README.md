@@ -205,7 +205,7 @@ Common HTTP status codes:
 -   `201` - Created
 -   `400` - Bad Request (validation errors)
 -   `404` - Not Found
--   `500` - Грешка в сървъра
+-   `500` - Грешка во серверот
 
 ## Business Logic
 

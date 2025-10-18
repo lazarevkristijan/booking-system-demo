@@ -31,7 +31,7 @@ router.get("/", async (req, res) => {
 		})
 	} catch (error) {
 		console.error("Error fetching history:", error)
-		res.status(500).json({ error: "Грешка в сървъра" })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 

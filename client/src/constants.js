@@ -53,7 +53,7 @@ export const createErrorModal = (response) => {
 	const infoElem = document.createElement("p")
 	infoElem.className = "text-slate-400 text-[12px] !mt-0"
 	infoElem.textContent =
-		"Доколкото получавате това повече пъти, свържете се с администратора"
+		"Доколку ја добивате оваа порака повеќе пати, контактирајте со администраторот"
 
 	content.appendChild(messageElem)
 	content.appendChild(infoElem)
@@ -105,7 +105,7 @@ function getErrorMessage(error) {
 			const data = error.response.data
 
 			// Determine main message
-			let mainMessage = "Възникна грешка"
+			let mainMessage = "Настана грешка"
 
 			if (typeof data?.error === "string") mainMessage = data.error
 			else if (typeof data?.message === "string")
@@ -118,7 +118,7 @@ function getErrorMessage(error) {
 
 			return `${mainMessage}\n\n${getRequestInfo(error)}`
 		} else if (error.request) {
-			return `No response from server.\n\n${getRequestInfo(error)}`
+			return `Нема одговор од серверот.\n\n${getRequestInfo(error)}`
 		} else {
 			return error.message
 		}
@@ -128,7 +128,7 @@ function getErrorMessage(error) {
 	if (typeof error === "string") return error
 	if (typeof error === "object" && error !== null)
 		return JSON.stringify(error)
-	return "Някакъв проблем възникна."
+	return "Се појави некаков проблем."
 }
 
 // MISC
@@ -143,7 +143,7 @@ export const navItems = [
 		icon: Calendar,
 	},
 	{
-		name: "Служители",
+		name: "Вработени",
 		path: "/employees",
 		icon: Users,
 	},
@@ -443,7 +443,7 @@ export const getSession = async () => {
 	return await axios
 		.get(`${SERVER_API}/auth/session`)
 		.then((res) => res.data.authenticated)
-		.catch((e) => createErrorModal("Възникна грешка: " + e))
+		.catch((e) => createErrorModal(e))
 }
 
 export const getLogout = async () => {

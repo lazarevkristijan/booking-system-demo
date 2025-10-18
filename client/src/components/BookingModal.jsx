@@ -292,7 +292,7 @@ export const BookingModal = ({
 		if (!selectedData.employee) {
 			createErrorModal({
 				data: {
-					error: "Моля изберете служител.",
+					error: "Ве молам изберете вработен.",
 				},
 			})
 			return
@@ -301,7 +301,7 @@ export const BookingModal = ({
 		if (selectedData.services.length === 0) {
 			createErrorModal({
 				data: {
-					error: "Моля изберете поне една услуга.",
+					error: "Ве молам изберете барем една услуга.",
 				},
 			})
 			return
@@ -312,7 +312,7 @@ export const BookingModal = ({
 		) {
 			createErrorModal({
 				data: {
-					error: "Моля изберете клиент или въведете нов клиент.",
+					error: "Ве молам изберете клиент или внесете нов клиент.",
 				},
 			})
 			return
@@ -320,7 +320,7 @@ export const BookingModal = ({
 		if (!selectedDateTime) {
 			createErrorModal({
 				data: {
-					error: "Няма избрана дата/час за резервацията.",
+					error: "Нема избрана дата/час за резервацијата.",
 				},
 			})
 			return
@@ -378,9 +378,9 @@ export const BookingModal = ({
 
 	// UI helpers
 	const steps = [
-		{ number: 1, title: "Избор на служител", icon: User },
+		{ number: 1, title: "Избор на вработен", icon: User },
 		{ number: 2, title: "Избор на услуги", icon: Clock },
-		{ number: 3, title: "Данни за клиента", icon: User },
+		{ number: 3, title: "Податоци за клиентот", icon: User },
 	]
 
 	if (!isOpen) return null
@@ -400,13 +400,13 @@ export const BookingModal = ({
 					<div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-200">
 						<div className="min-w-0 flex-1 mr-4">
 							<h3 className="text-base sm:text-lg font-semibold text-slate-800 font-poppins truncate">
-								Нова резервация
+								Нова резервација
 							</h3>
 							<p className="text-xs sm:text-sm text-slate-600 mt-1 truncate">
 								{selectedDateTime
 									? alignToThirtyMinutes(
 											selectedDateTime
-									  ).toLocaleString("bg-BG")
+									  ).toLocaleString("mk-MK")
 									: ""}
 							</p>
 						</div>
@@ -484,11 +484,11 @@ export const BookingModal = ({
 						{currentStep === 1 && (
 							<div>
 								<h4 className="text-base sm:text-lg font-medium text-slate-800 mb-4">
-									Изберете свободен служител
+									Изберете слободен вработен
 								</h4>
 								<div className="grid gap-3">
 									{loadingEmployees ? (
-										<div>Зареждане на служители...</div>
+										<div>Вчитување на вработени...</div>
 									) : (
 										localEmployees.map((employee) => (
 											<button
@@ -521,8 +521,8 @@ export const BookingModal = ({
 														}`}
 													>
 														{employee.available
-															? "Свободен"
-															: "Зает"}
+															? "Слободен"
+															: "Зафатен"}
 													</span>
 												</div>
 											</button>
@@ -539,12 +539,12 @@ export const BookingModal = ({
 									Изберете услуги
 								</h4>
 								<p className="text-sm text-slate-600 mb-4">
-									Можете да изберете няколко услуги за тази
-									резервация
+									Можете да изберете повеќе услуги за оваа
+									резервација
 								</p>
 
 								{loadingServices ? (
-									<div>Зареждане на услуги...</div>
+									<div>Вчитување на услуги...</div>
 								) : (
 									<div className="grid gap-3">
 										{(servicesData || []).map((service) => {
@@ -611,7 +611,7 @@ export const BookingModal = ({
 																<span className="font-semibold text-slate-800 text-sm sm:text-base">
 																	{service.price ||
 																		0}{" "}
-																	лв.
+																	ден.
 																</span>
 															</div>
 															<div className="flex items-center text-xs sm:text-sm text-slate-500">
@@ -647,9 +647,9 @@ export const BookingModal = ({
 											)}
 										</div>
 										<div className="mt-2 text-sm text-slate-600">
-											Общо време: {totals.totalDuration}{" "}
-											минути • Обща цена:{" "}
-											{totals.totalPrice.toFixed(2)} лв.
+											Вкупно време: {totals.totalDuration}{" "}
+											минути • Вкупна цена:{" "}
+											{totals.totalPrice.toFixed(2)} ден.
 										</div>
 									</div>
 								)}
@@ -660,7 +660,7 @@ export const BookingModal = ({
 						{currentStep === 3 && (
 							<div>
 								<h4 className="text-base sm:text-lg font-medium text-slate-800 mb-4">
-									Информация за клиент
+									Информации за клиент
 								</h4>
 								<div className="space-y-4">
 									<div
@@ -668,7 +668,7 @@ export const BookingModal = ({
 										ref={suggestionsRef}
 									>
 										<label className="block text-sm font-medium text-slate-700 mb-2">
-											Търсене на съществуващ клиент
+											Пребарување на постоечки клиент
 										</label>
 										<div className="relative">
 											<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -699,7 +699,7 @@ export const BookingModal = ({
 													)
 														setShowSuggestions(true)
 												}}
-												placeholder="Въведете име на клиент..."
+												placeholder="Внесете име на клиент..."
 												className="w-full pl-10 pr-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent touch-manipulation"
 											/>
 										</div>
@@ -791,7 +791,7 @@ export const BookingModal = ({
 												</div>
 												<div className="relative flex justify-center text-sm">
 													<span className="px-2 bg-white text-slate-500">
-														или създайте нов клиент
+														или креирајте нов клиент
 													</span>
 												</div>
 											</div>
@@ -799,7 +799,7 @@ export const BookingModal = ({
 											<div className="grid grid-cols-1 gap-4">
 												<div>
 													<label className="block text-sm font-medium text-slate-700 mb-2">
-														Име и Фамилия
+														Име и Презиме
 													</label>
 													<input
 														type="text"
@@ -822,12 +822,12 @@ export const BookingModal = ({
 															)
 														}
 														className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent touch-manipulation"
-														placeholder="Въведете име и фамилия"
+														placeholder="Внесете име и презиме"
 													/>
 												</div>
 												<div>
 													<label className="block text-sm font-medium text-slate-700 mb-2">
-														Телефонен номер
+														Телефонски број
 													</label>
 													<input
 														type="tel"
@@ -850,7 +850,7 @@ export const BookingModal = ({
 															)
 														}
 														className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent touch-manipulation"
-														placeholder="Въведете телефонен номер"
+														placeholder="Внесете телефонски број"
 													/>
 												</div>
 											</div>
@@ -863,14 +863,14 @@ export const BookingModal = ({
 										</div>
 										<div className="relative flex justify-center text-sm">
 											<span className="px-2 bg-white text-slate-500">
-												допълнително
+												дополнително
 											</span>
 										</div>
 									</div>
 
 									<div>
 										<label className="block text-sm font-medium text-slate-700 mb-2">
-											Бележки за резервацията
+											Белешки за резервацијата
 										</label>
 										<textarea
 											value={selectedData.notes}
@@ -882,7 +882,7 @@ export const BookingModal = ({
 											}
 											maxLength={100}
 											className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent touch-manipulation resize-none"
-											placeholder="Въведете бележки за резервацията (по избор)..."
+											placeholder="Внесете белешки за резервацијата (по избор)..."
 										/>
 										<p className="text-right text-slate-500">
 											{selectedData?.notes?.length}
@@ -928,8 +928,8 @@ export const BookingModal = ({
 														: "bg-gray-700 hover:bg-gray-800"
 												}`}
 											>
-												Общо: {totals.totalPrice} лв. |
-												Ръчно коригиране
+												Вкупно: {totals.totalPrice} ден.
+												| Рачно прилагодување
 											</button>
 										</div>
 
@@ -970,7 +970,7 @@ export const BookingModal = ({
 															)
 														}}
 														className="w-full border rounded px-2 py-1 text-sm"
-														placeholder="Въведете цена..."
+														placeholder="Внесете цена..."
 													/>
 												</div>
 											</div>
@@ -1012,8 +1012,8 @@ export const BookingModal = ({
 									className="inline-flex items-center px-6 py-3 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-h-[44px]"
 								>
 									{bookingMutation.isLoading
-										? "Създаване..."
-										: "Създай резервация"}
+										? "Креирање..."
+										: "Креирај резервација"}
 									<Check className="h-4 w-4 ml-1" />
 								</button>
 							)}

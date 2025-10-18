@@ -50,23 +50,23 @@ export const HistoryPage = () => {
 
 	const columns = [
 		{ key: "createdAt", label: "Кога", type: "datetime" },
-		{ key: "username", label: "Потребител" },
-		{ key: "action", label: "Действие" },
+		{ key: "username", label: "Корисник" },
+		{ key: "action", label: "Акција" },
 		{ key: "entityType", label: "Тип" },
 		// { key: "entityId", label: "ID" },
-		{ key: "details", label: "Детайли" },
+		{ key: "details", label: "Детали" },
 	]
 
 	return (
 		<div className="p-4 sm:p-6">
 			<CrudTable
-				title={loading ? "История (зареждане...)" : "История"}
+				title={loading ? "Историја (вчитување...)" : "Историја"}
 				data={data}
 				columns={columns}
 				onAdd={() => load(pageInfo.page)} // reuse as refresh button
 				onView={handleViewDetails}
-				addButtonText="Опресни"
-				searchPlaceholder="Търсене в история..."
+				addButtonText="Освежи"
+				searchPlaceholder="Пребарување во историја..."
 			/>
 			<HistoryDetailsModal
 				isOpen={isModalOpen}
