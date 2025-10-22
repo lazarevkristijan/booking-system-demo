@@ -1,6 +1,6 @@
-import { useState } from "react"
+import {useState } from "react"
 import { CrudTable } from "../components/CrudTable"
-import { X, Calendar, ChevronLeft, ChevronRight } from "lucide-react"
+import { X, Calendar } from "lucide-react"
 import axios from "axios"
 axios.defaults.withCredentials = true
 import {
@@ -16,8 +16,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 export const ClientsPage = () => {
 	const queryClient = useQueryClient()
 
-	// Pagination state
+	// Pagination and search state
 	const [currentPage, setCurrentPage] = useState(1)
+	const [searchTerm, setSearchTerm] = useState("")
+	const pageSize = 50
+
 	const [showModal, setShowModal] = useState(false)
 	const [showHistoryModal, setShowHistoryModal] = useState(false)
 	const [selectedClient, setSelectedClient] = useState(null)
@@ -27,20 +30,21 @@ export const ClientsPage = () => {
 		notes: "",
 	})
 
-	// Fetch clients with pagination
+	// Fetch clients with pagination and search
 	const { data, isLoading, isFetching } = useQuery({
-		queryKey: ["clients_paginated", currentPage],
-		queryFn: () => getClients(currentPage, 99999),
+		queryKey: ["clients_paginated", currentPage, searchTerm],
+		queryFn: () => getClients(currentPage, pageSize, searchTerm),
 		keepPreviousData: true,
 	})
 
 	const clients = data?.clients || []
-	const pagination = data?.pagination || {}
+	const pagination = data?.pagination || { total: 0, totalPages: 0 }
 
 	const { data: allHistory } = useQuery({
 		queryKey: ["all_booking_history"],
 		queryFn: getClientsBookingHystory,
 		staleTime: 1000 * 60 * 5,
+		enabled: showHistoryModal,
 	})
 
 	const columns = [
@@ -94,7 +98,7 @@ export const ClientsPage = () => {
 		} else {
 			await postNewClientFromPage(formData, clients, () => {
 				queryClient.invalidateQueries(["clients_paginated"])
-				// Optionally go to last page where new client would be
+				// Optionally go to last page or stay on current
 			})
 		}
 
@@ -163,37 +167,7 @@ export const ClientsPage = () => {
 					</p>
 				</div>
 
-				{/* Info Bar with Pagination */}
-				<div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-					{/* Pagination Controls */}
-					{pagination.totalPages > 1 && (
-						<div className="flex items-center gap-2">
-							<button
-								onClick={() =>
-									setCurrentPage((p) => Math.max(1, p - 1))
-								}
-								disabled={pagination.page === 1 || isFetching}
-								className="inline-flex items-center px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
-							>
-								<ChevronLeft className="h-4 w-4 mr-1" />
-								Претходна
-							</button>
-							<span className="text-sm text-slate-600 px-2">
-								{pagination.page} / {pagination.totalPages}
-							</span>
-							<button
-								onClick={() => setCurrentPage((p) => p + 1)}
-								disabled={!pagination.hasMore || isFetching}
-								className="inline-flex items-center px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
-							>
-								Следна
-								<ChevronRight className="h-4 w-4 ml-1" />
-							</button>
-						</div>
-					)}
-				</div>
-
-				{/* CrudTable - handles search debouncing internally */}
+				{/* CrudTable with server-side pagination */}
 				<CrudTable
 					title="Сите Клиенти"
 					data={clients}
@@ -204,6 +178,14 @@ export const ClientsPage = () => {
 					onView={handleViewHistory}
 					searchPlaceholder="Пребарај по име, телефон или белешки..."
 					addButtonText="Додади Клиент"
+					// Server-side pagination props
+					serverSidePagination={true}
+					totalItems={pagination.total}
+					currentPage={currentPage}
+					pageSize={pageSize}
+					onPageChange={setCurrentPage}
+					onSearchChange={setSearchTerm}
+					isLoading={isFetching}
 				/>
 
 				{/* Edit/Add Modal */}

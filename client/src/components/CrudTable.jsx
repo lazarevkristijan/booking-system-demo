@@ -19,44 +19,90 @@ export const CrudTable = ({
 	onView,
 	searchPlaceholder = "Пребарување...",
 	addButtonText = "Додади Нов",
+	// New props for server-side pagination
+	serverSidePagination = false,
+	totalItems = 0,
+	currentPage = 1,
+	pageSize = 50,
+	onPageChange,
+	onSearchChange,
+	isLoading = false,
 }) => {
 	const [searchTerm, setSearchTerm] = useState("")
 	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm)
-	const [currentPage, setCurrentPage] = useState(1)
+	const [localCurrentPage, setLocalCurrentPage] = useState(1)
 
+	// Debounce search term
 	useEffect(() => {
 		const handler = setTimeout(() => {
-			setDebouncedSearchTerm(searchTerm)
+			// Only update and reset page if search term actually changed
+			if (debouncedSearchTerm !== searchTerm) {
+				setDebouncedSearchTerm(searchTerm)
+				// Reset to page 1 when search changes
+				if (serverSidePagination && onPageChange) {
+					onPageChange(1)
+				} else {
+					setLocalCurrentPage(1)
+				}
+			}
 		}, 300) // 300ms debounce delay
 
 		return () => {
-			clearTimeout(handler) // Cleanup on next effect
+			clearTimeout(handler)
 		}
-	}, [searchTerm])
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [searchTerm, serverSidePagination])
 
-	// Reset to page 1 when search term changes
+	// Notify parent of search changes (for server-side)
 	useEffect(() => {
-		setCurrentPage(1)
-	}, [debouncedSearchTerm])
+		if (serverSidePagination && onSearchChange) {
+			onSearchChange(debouncedSearchTerm)
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [debouncedSearchTerm, serverSidePagination])
 
-	const searchFilteredData =
-		debouncedSearchTerm === ""
-			? data
-			: data.filter((item) =>
-					Object.values(item).some((value) =>
-						value
-							?.toString()
-							.toLowerCase()
-							.includes(debouncedSearchTerm.toLowerCase())
-					)
-			  )
+	// Client-side filtering and pagination (fallback for non-server-side mode)
+	const searchFilteredData = serverSidePagination
+		? data // Don't filter on client if server-side
+		: debouncedSearchTerm === ""
+		? data
+		: data.filter((item) =>
+				Object.values(item).some((value) =>
+					value
+						?.toString()
+						.toLowerCase()
+						.includes(debouncedSearchTerm.toLowerCase())
+				)
+		  )
 
 	// Calculate pagination
-	const itemsPerPage = 10
-	const totalPages = Math.ceil(searchFilteredData.length / itemsPerPage)
-	const startIndex = (currentPage - 1) * itemsPerPage
+	const itemsPerPage = serverSidePagination ? pageSize : 10
+	const totalPages = serverSidePagination
+		? Math.ceil(totalItems / pageSize)
+		: Math.ceil(searchFilteredData.length / itemsPerPage)
+
+	const effectiveCurrentPage = serverSidePagination
+		? currentPage
+		: localCurrentPage
+
+	const startIndex = (effectiveCurrentPage - 1) * itemsPerPage
 	const endIndex = startIndex + itemsPerPage
-	const paginatedData = searchFilteredData.slice(startIndex, endIndex)
+
+	const paginatedData = serverSidePagination
+		? data // Already paginated by server
+		: searchFilteredData.slice(startIndex, endIndex)
+
+	const totalDisplayItems = serverSidePagination
+		? totalItems
+		: searchFilteredData.length
+
+	const handlePageChange = (newPage) => {
+		if (serverSidePagination && onPageChange) {
+			onPageChange(newPage)
+		} else {
+			setLocalCurrentPage(newPage)
+		}
+	}
 
 	const formatValue = (value, type) => {
 		if (value === null || value === undefined) return "-"
@@ -94,13 +140,15 @@ export const CrudTable = ({
 								placeholder={searchPlaceholder}
 								value={searchTerm}
 								onChange={(e) => setSearchTerm(e.target.value)}
-								className="pl-10 pr-4 py-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-500 focus:border-transparent w-full sm:w-auto touch-manipulation"
+								disabled={isLoading}
+								className="pl-10 pr-4 py-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-slate-500 focus:border-transparent w-full sm:w-auto touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
 							/>
 						</div>
 						{/* Add button */}
 						<button
 							onClick={onAdd}
-							className="inline-flex items-center justify-center px-4 py-3 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors touch-manipulation min-h-[44px]"
+							disabled={isLoading}
+							className="inline-flex items-center justify-center px-4 py-3 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors touch-manipulation min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
 						>
 							<Plus className="h-4 w-4 mr-2" />
 							{addButtonText}
@@ -111,7 +159,15 @@ export const CrudTable = ({
 
 			{/* Table */}
 			<div className="overflow-x-auto">
-				{paginatedData.length === 0 ? (
+				{isLoading ? (
+					<div className="px-4 sm:px-6 py-12 text-center">
+						<div className="animate-pulse space-y-4">
+							<div className="h-8 bg-slate-200 rounded w-full"></div>
+							<div className="h-8 bg-slate-200 rounded w-full"></div>
+							<div className="h-8 bg-slate-200 rounded w-full"></div>
+						</div>
+					</div>
+				) : paginatedData.length === 0 ? (
 					<div className="px-4 sm:px-6 py-12 text-center">
 						<div className="text-slate-400 text-sm">
 							{searchTerm
@@ -172,7 +228,8 @@ export const CrudTable = ({
 											{onView && (
 												<button
 													onClick={() => onView(item)}
-													className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors touch-manipulation"
+													disabled={isLoading}
+													className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors touch-manipulation disabled:opacity-50"
 													title="Види Детали"
 												>
 													<Eye className="h-4 w-4" />
@@ -181,7 +238,8 @@ export const CrudTable = ({
 											{onEdit && (
 												<button
 													onClick={() => onEdit(item)}
-													className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors touch-manipulation"
+													disabled={isLoading}
+													className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors touch-manipulation disabled:opacity-50"
 													title="Уреди"
 												>
 													<Edit className="h-4 w-4" />
@@ -192,7 +250,8 @@ export const CrudTable = ({
 													onClick={() =>
 														onDelete(item)
 													}
-													className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors touch-manipulation"
+													disabled={isLoading}
+													className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors touch-manipulation disabled:opacity-50"
 													title="Избриши"
 												>
 													<Trash2 className="h-4 w-4" />
@@ -206,8 +265,9 @@ export const CrudTable = ({
 					</table>
 				)}
 			</div>
-			{/* Pagination Controls - ADD THIS */}
-			{searchFilteredData.length > 0 && (
+
+			{/* Pagination Controls */}
+			{!isLoading && totalDisplayItems > 0 && (
 				<div className="px-4 sm:px-6 py-4 border-t border-slate-200">
 					<div className="flex flex-col sm:flex-row items-center justify-between gap-4">
 						<div className="text-sm text-slate-700">
@@ -217,44 +277,63 @@ export const CrudTable = ({
 							</span>{" "}
 							до{" "}
 							<span className="font-medium">
-								{Math.min(endIndex, searchFilteredData.length)}
+								{Math.min(
+									startIndex + paginatedData.length,
+									totalDisplayItems
+								)}
 							</span>{" "}
 							од{" "}
 							<span className="font-medium">
-								{searchFilteredData.length}
+								{totalDisplayItems}
 							</span>{" "}
 							резултати
 						</div>
 
-						<div className="flex items-center gap-2">
-							<button
-								onClick={() =>
-									setCurrentPage((p) => Math.max(1, p - 1))
-								}
-								disabled={currentPage === 1}
-								className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
-								aria-label="Претходна страна"
-							>
-								<ChevronLeft className="h-5 w-5" />
-							</button>
+						{totalPages > 1 && (
+							<div className="flex items-center gap-2">
+								<button
+									onClick={() =>
+										handlePageChange(
+											Math.max(
+												1,
+												effectiveCurrentPage - 1
+											)
+										)
+									}
+									disabled={
+										effectiveCurrentPage === 1 || isLoading
+									}
+									className="inline-flex items-center px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] transition-colors"
+								>
+									<ChevronLeft className="h-4 w-4 mr-1" />
+									Претходна
+								</button>
 
-							<span className="text-sm text-slate-700 px-3">
-								Страна {currentPage} од {totalPages}
-							</span>
+								<span className="text-sm text-slate-700 px-3">
+									Страна {effectiveCurrentPage} од{" "}
+									{totalPages}
+								</span>
 
-							<button
-								onClick={() =>
-									setCurrentPage((p) =>
-										Math.min(totalPages, p + 1)
-									)
-								}
-								disabled={currentPage === totalPages}
-								className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
-								aria-label="Следна страна"
-							>
-								<ChevronRight className="h-5 w-5" />
-							</button>
-						</div>
+								<button
+									onClick={() =>
+										handlePageChange(
+											Math.min(
+												totalPages,
+												effectiveCurrentPage + 1
+											)
+										)
+									}
+									disabled={
+										effectiveCurrentPage === totalPages ||
+										isLoading
+									}
+									className="inline-flex items-center px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] transition-colors"
+								>
+									Следна
+									<ChevronRight className="h-4 w-4 ml-1" />
+								</button>
+							</div>
+						)}
 					</div>
 				</div>
 			)}
