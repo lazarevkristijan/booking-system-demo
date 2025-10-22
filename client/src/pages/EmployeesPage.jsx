@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { CrudTable } from "../components/CrudTable"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import axios from "axios"
 axios.defaults.withCredentials = true
 import {
@@ -12,7 +12,12 @@ import {
 import { TableSkeleton } from "../components/LoadingSkeleton"
 
 export const EmployeesPage = () => {
+	const queryClient = useQueryClient() // ADD THIS
+
 	const [employees, setEmployees] = useState([])
+	const [showModal, setShowModal] = useState(false)
+	const [selectedEmployee, setSelectedEmployee] = useState(null)
+	const [formData, setFormData] = useState({ name: "" })
 
 	const { data: allEmployees, isLoading } = useQuery({
 		queryKey: ["all_employees"],
@@ -22,10 +27,6 @@ export const EmployeesPage = () => {
 	useEffect(() => {
 		if (allEmployees) setEmployees(allEmployees)
 	}, [allEmployees])
-
-	const [showModal, setShowModal] = useState(false)
-	const [selectedEmployee, setSelectedEmployee] = useState(null)
-	const [formData, setFormData] = useState({ name: "" })
 
 	const columns = [{ key: "name", label: "Име и Презиме", type: "text" }]
 
@@ -51,6 +52,9 @@ export const EmployeesPage = () => {
 			)
 		) {
 			await deleteEmploeeFromPage(employee, employees, setEmployees)
+
+			queryClient.invalidateQueries(["all_employees"])
+			queryClient.invalidateQueries(["employees"])
 		}
 	}
 
@@ -67,6 +71,9 @@ export const EmployeesPage = () => {
 		} else {
 			await postNewEmployeeFromPage(formData, employees, setEmployees)
 		}
+
+		queryClient.invalidateQueries(["all_employees"])
+		queryClient.invalidateQueries(["employees"])
 
 		setShowModal(false)
 		setFormData({ name: "" })

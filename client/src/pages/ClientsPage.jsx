@@ -18,6 +18,14 @@ export const ClientsPage = () => {
 
 	// Pagination state
 	const [currentPage, setCurrentPage] = useState(1)
+	const [showModal, setShowModal] = useState(false)
+	const [showHistoryModal, setShowHistoryModal] = useState(false)
+	const [selectedClient, setSelectedClient] = useState(null)
+	const [formData, setFormData] = useState({
+		full_name: "",
+		phone: "",
+		notes: "",
+	})
 
 	// Fetch clients with pagination
 	const { data, isLoading, isFetching } = useQuery({
@@ -28,15 +36,6 @@ export const ClientsPage = () => {
 
 	const clients = data?.clients || []
 	const pagination = data?.pagination || {}
-
-	const [showModal, setShowModal] = useState(false)
-	const [showHistoryModal, setShowHistoryModal] = useState(false)
-	const [selectedClient, setSelectedClient] = useState(null)
-	const [formData, setFormData] = useState({
-		full_name: "",
-		phone: "",
-		notes: "",
-	})
 
 	const { data: allHistory } = useQuery({
 		queryKey: ["all_booking_history"],
@@ -76,6 +75,7 @@ export const ClientsPage = () => {
 			await deleteClientFromClientsPage(client, clients, () => {
 				queryClient.invalidateQueries(["clients_paginated"])
 			})
+			queryClient.invalidateQueries(["clients"])
 		}
 	}
 
@@ -97,6 +97,8 @@ export const ClientsPage = () => {
 				// Optionally go to last page where new client would be
 			})
 		}
+
+		queryClient.invalidateQueries(["clients"])
 
 		setShowModal(false)
 		setFormData({ full_name: "", phone: "", notes: "" })

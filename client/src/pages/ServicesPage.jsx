@@ -8,11 +8,20 @@ import {
 	patchServiceFrompage,
 	postServiceFrompage,
 } from "../constants"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect } from "react"
 
 export const ServicesPage = () => {
+	const queryClient = useQueryClient() // ADD THIS
+
 	const [services, setServices] = useState([])
+	const [showModal, setShowModal] = useState(false)
+	const [selectedService, setSelectedService] = useState(null)
+	const [formData, setFormData] = useState({
+		name: "",
+		duration: "",
+		price: "",
+	})
 
 	const { data: allServices } = useQuery({
 		queryKey: ["all_services"],
@@ -22,14 +31,6 @@ export const ServicesPage = () => {
 	useEffect(() => {
 		if (allServices) setServices(allServices)
 	}, [allServices])
-
-	const [showModal, setShowModal] = useState(false)
-	const [selectedService, setSelectedService] = useState(null)
-	const [formData, setFormData] = useState({
-		name: "",
-		duration: "",
-		price: "",
-	})
 
 	const columns = [
 		{ key: "name", label: "Име на услугата", type: "text" },
@@ -61,6 +62,9 @@ export const ServicesPage = () => {
 			)
 		) {
 			await deleteServiceFrompage(service, services, setServices)
+
+			queryClient.invalidateQueries(["all_services"])
+			queryClient.invalidateQueries(["services"])
 		}
 	}
 
@@ -77,6 +81,9 @@ export const ServicesPage = () => {
 		} else {
 			await postServiceFrompage(services, setServices, formData)
 		}
+
+		queryClient.invalidateQueries(["all_services"])
+		queryClient.invalidateQueries(["services"])
 
 		setShowModal(false)
 		setFormData({ name: "", duration: "", price: "" })
