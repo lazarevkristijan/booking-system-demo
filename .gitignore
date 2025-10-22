@@ -28,3 +28,7 @@ dist-ssr
 contacts.json
 contacts.csv
 *.py
+
+
+# MIGRATIONS
+server/migrations/*
