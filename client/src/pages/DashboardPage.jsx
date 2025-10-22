@@ -109,9 +109,9 @@ export const DashboardPage = () => {
 	const handleBookingCreated = useCallback((newBooking) => {
 		if (newBooking !== null) {
 			setBookings((prevBookings) => [...prevBookings, newBooking])
+			setViewMode("month")
 		}
 		setShowBookingModal(false)
-		setViewMode("month")
 	}, [])
 	const handleBookingDeleted = useCallback((bookingId) => {
 		setBookings((prevBookings) =>
@@ -658,35 +658,48 @@ export const DashboardPage = () => {
 								</div>
 							</div>
 
-							{/* Mobile: Employee Selector Dropdown */}
+							{/* Mobile: Employee Selector Boxes */}
 							{allEmployees.length > 1 ? (
 								<div className="sm:hidden px-4 py-3 border-b border-slate-200 bg-slate-50">
-									<label className="block text-sm font-medium text-slate-700 mb-2">
-										Избери вработен
+									<label className="block text-sm font-medium text-slate-700 mb-3">
+										Филтрирај по вработен
 									</label>
-									<select
-										value={selectedEmployeeId || "all"}
-										onChange={(e) =>
-											setSelectedEmployeeId(
-												e.target.value === "all"
-													? null
-													: e.target.value
-											)
-										}
-										className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent bg-white"
-									>
-										<option value="all">
+									<div className="grid grid-cols-2 gap-2">
+										{/* "All Employees" box */}
+										<button
+											onClick={() =>
+												setSelectedEmployeeId(null)
+											}
+											className={`px-4 py-3 text-sm font-medium rounded-lg border-2 transition-all touch-manipulation min-h-[52px] ${
+												selectedEmployeeId === null
+													? "border-blue-600 bg-blue-50 text-blue-700"
+													: "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
+											}`}
+										>
 											Сите вработени
-										</option>
+										</button>
+
+										{/* Individual employee boxes */}
 										{allEmployees.map((emp) => (
-											<option
+											<button
 												key={emp._id}
-												value={emp._id}
+												onClick={() =>
+													setSelectedEmployeeId(
+														emp._id
+													)
+												}
+												className={`px-4 py-3 text-sm font-medium rounded-lg border-2 transition-all touch-manipulation min-h-[52px] truncate ${
+													selectedEmployeeId ===
+													emp._id
+														? "border-blue-600 bg-blue-50 text-blue-700"
+														: "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
+												}`}
+												title={emp.name} // Show full name on hover if truncated
 											>
 												{emp.name}
-											</option>
+											</button>
 										))}
-									</select>
+									</div>
 								</div>
 							) : allEmployees.length === 1 ? (
 								<div className="sm:hidden px-4 py-3 border-b border-slate-200 bg-slate-50">
@@ -864,14 +877,6 @@ export const DashboardPage = () => {
 										time,
 										selectedEmployeeId
 									)
-
-									// Skip empty time slots if no employee selected and no bookings
-									if (
-										!selectedEmployeeId &&
-										slotBookings.length === 0
-									) {
-										return null
-									}
 
 									return (
 										<div
