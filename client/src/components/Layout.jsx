@@ -1,19 +1,31 @@
 import { useEffect, useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
-import { Menu, X, LogOut, User, History } from "lucide-react"
+import { Menu, X, LogOut, User } from "lucide-react"
 import axios from "axios"
 axios.defaults.withCredentials = true
-import { getCurrentUser, getLogout, navItems } from "../constants"
+import {
+	getCurrentUser,
+	getLogout,
+	navItems,
+	adminNavItems,
+	superadminNavItems,
+} from "../constants"
+import { ConnectionStatus } from "./ConnectionStatus"
+import { useQueryClient } from "@tanstack/react-query"
 
 // Main Layout component
-export const Layout = ({ children, onLogout }) => {
+export const Layout = ({ children, onLogout, userRole }) => {
 	const [isMenuOpen, setIsMenuOpen] = useState(false)
-	const [currentUsername, setCurrentUsername] = useState("")
 	const location = useLocation()
 	const navigate = useNavigate()
+	const [currentUsername, setCurrentUsername] = useState("")
+	const [organizationName, setOrganizationName] = useState("")
+	const queryClient = useQueryClient()
 
 	const handleLogout = async () => {
 		await getLogout()
+
+		queryClient.clear()
 
 		if (onLogout) onLogout()
 		navigate("/login", { replace: true })
@@ -25,9 +37,15 @@ export const Layout = ({ children, onLogout }) => {
 			if (userInfo?.username) {
 				setCurrentUsername(userInfo.username)
 			}
+			if (userInfo?.organization) {
+				setOrganizationName(userInfo.organization.name)
+			}
 		}
 		fetchUser()
-	})
+	}, [])
+
+	const isAdmin = userRole === "admin"
+	const isSuperAdmin = userRole === "superadmin"
 
 	return (
 		<div className="min-h-screen flex flex-col bg-slate-50">
@@ -40,7 +58,7 @@ export const Layout = ({ children, onLogout }) => {
 					<span className="flex w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 items-center justify-center text-white font-bold text-sm">
 						MC
 					</span>
-					HAIRSALON
+					{isSuperAdmin ? "SuperAdmin" : organizationName}
 				</Link>
 				<button
 					className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
@@ -63,7 +81,7 @@ export const Layout = ({ children, onLogout }) => {
 								<span className="flex w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 items-center justify-center text-white font-bold text-sm">
 									MC
 								</span>
-								HAIRSALON
+								{isSuperAdmin ? "SuperAdmin" : organizationName}
 							</Link>
 							<button
 								className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
@@ -74,34 +92,75 @@ export const Layout = ({ children, onLogout }) => {
 							</button>
 						</div>
 						<nav className="flex-1 px-2 py-4 space-y-1">
-							{navItems.map((item) => (
-								<Link
-									key={item.path}
-									to={item.path}
-									className={`flex items-center px-4 py-3 rounded-lg font-medium text-base transition-colors ${
-										location.pathname === item.path
-											? "bg-slate-100 text-slate-900"
-											: "text-slate-700 hover:bg-slate-50"
-									}`}
-									onClick={() => setIsMenuOpen(false)}
-								>
-									<item.icon className="h-5 w-5 mr-2" />
-									{item.name}
-								</Link>
-							))}
-							{currentUsername === "admin" && (
-								<Link
-									to="/history"
-									className={`flex items-center px-4 py-3 rounded-lg font-medium text-base transition-colors ${
-										location.pathname === "/history"
-											? "bg-slate-100 text-slate-900"
-											: "text-slate-700 hover:bg-slate-50"
-									}`}
-									onClick={() => setIsMenuOpen(false)}
-								>
-									<History className="h-5 w-5 mr-2" />
-									Историја
-								</Link>
+							{/* Regular nav items - only show if not superadmin */}
+							{!isSuperAdmin &&
+								navItems.map((item) => (
+									<Link
+										key={item.path}
+										to={item.path}
+										className={`flex items-center px-4 py-3 rounded-lg font-medium text-base transition-colors ${
+											location.pathname === item.path
+												? "bg-slate-100 text-slate-900"
+												: "text-slate-700 hover:bg-slate-50"
+										}`}
+										onClick={() => setIsMenuOpen(false)}
+									>
+										<item.icon className="h-5 w-5 mr-2" />
+										{item.name}
+									</Link>
+								))}
+
+							{/* Admin nav items */}
+							{isAdmin && !isSuperAdmin && (
+								<>
+									<div className="px-4 py-2">
+										<div className="border-t border-slate-200"></div>
+										<p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-2">
+											Администрација
+										</p>
+									</div>
+									{adminNavItems.map((item) => (
+										<Link
+											key={item.path}
+											to={item.path}
+											className={`flex items-center px-4 py-3 rounded-lg font-medium text-base transition-colors ${
+												location.pathname === item.path
+													? "bg-blue-100 text-blue-900"
+													: "text-slate-700 hover:bg-slate-50"
+											}`}
+											onClick={() => setIsMenuOpen(false)}
+										>
+											<item.icon className="h-5 w-5 mr-2" />
+											{item.name}
+										</Link>
+									))}
+								</>
+							)}
+
+							{/* ✅ Superadmin nav items */}
+							{isSuperAdmin && (
+								<>
+									<div className="px-4 py-2">
+										<p className="text-xs font-semibold text-purple-500 uppercase tracking-wider">
+											Супер Администратор
+										</p>
+									</div>
+									{superadminNavItems.map((item) => (
+										<Link
+											key={item.path}
+											to={item.path}
+											className={`flex items-center px-4 py-3 rounded-lg font-medium text-base transition-colors ${
+												location.pathname === item.path
+													? "bg-purple-100 text-purple-900"
+													: "text-slate-700 hover:bg-slate-50"
+											}`}
+											onClick={() => setIsMenuOpen(false)}
+										>
+											<item.icon className="h-5 w-5 mr-2" />
+											{item.name}
+										</Link>
+									))}
+								</>
 							)}
 
 							<button
@@ -138,44 +197,83 @@ export const Layout = ({ children, onLogout }) => {
 							MС
 						</span>
 						<span className="font-bold text-slate-800 text-xl font-poppins">
-							HAIRSALON
+							{organizationName}
 						</span>
 					</div>
 					<nav className="flex-1 px-2 py-4 space-y-1">
-						{navItems.map((item) => (
-							<Link
-								key={item.path}
-								to={item.path}
-								className={`flex items-center px-4 py-3 rounded-lg font-medium text-base transition-colors ${
-									location.pathname === item.path
-										? "bg-slate-100 text-slate-900"
-										: "text-slate-700 hover:bg-slate-50"
-								}`}
-							>
-								<item.icon className="h-5 w-5 mr-2" />
-								{item.name}
-							</Link>
-						))}
+						{/* Regular nav items - only show if not superadmin */}
+						{!isSuperAdmin &&
+							navItems.map((item) => (
+								<Link
+									key={item.path}
+									to={item.path}
+									className={`flex items-center px-4 py-3 rounded-lg font-medium text-base transition-colors ${
+										location.pathname === item.path
+											? "bg-slate-100 text-slate-900"
+											: "text-slate-700 hover:bg-slate-50"
+									}`}
+								>
+									<item.icon className="h-5 w-5 mr-2" />
+									{item.name}
+								</Link>
+							))}
 
+						{/* Admin nav items */}
+						{isAdmin && !isSuperAdmin && (
+							<>
+								<div className="px-4 py-2">
+									<div className="border-t border-slate-200"></div>
+									<p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-2">
+										Администрација
+									</p>
+								</div>
+								{adminNavItems.map((item) => (
+									<Link
+										key={item.path}
+										to={item.path}
+										className={`flex items-center px-4 py-3 rounded-lg font-medium text-base transition-colors ${
+											location.pathname === item.path
+												? "bg-blue-100 text-blue-900"
+												: "text-slate-700 hover:bg-slate-50"
+										}`}
+									>
+										<item.icon className="h-5 w-5 mr-2" />
+										{item.name}
+									</Link>
+								))}
+							</>
+						)}
+
+						{/* ✅ Superadmin nav items */}
+						{isSuperAdmin && (
+							<>
+								<div className="px-4 py-2">
+									<p className="text-xs font-semibold text-purple-500 uppercase tracking-wider">
+										Супер Администратор
+									</p>
+								</div>
+								{superadminNavItems.map((item) => (
+									<Link
+										key={item.path}
+										to={item.path}
+										className={`flex items-center px-4 py-3 rounded-lg font-medium text-base transition-colors ${
+											location.pathname === item.path
+												? "bg-purple-100 text-purple-900"
+												: "text-slate-700 hover:bg-slate-50"
+										}`}
+									>
+										<item.icon className="h-5 w-5 mr-2" />
+										{item.name}
+									</Link>
+								))}
+							</>
+						)}
 						<div
 							className={`flex items-center px-4 py-3 rounded-lg font-medium text-base transition-colors text-slate-600 bg-slate-50 border border-slate-200`}
 						>
 							<User className="h-5 w-5 mr-2" />
 							Корисник: {currentUsername || "Вчитување..."}
 						</div>
-						{currentUsername === "admin" && (
-							<Link
-								to={"/history"}
-								className={`flex items-center px-4 py-3 rounded-lg font-medium text-base transition-colors ${
-									location.pathname === "/history"
-										? "bg-slate-100 text-slate-900"
-										: "text-slate-700 hover:bg-slate-50"
-								}`}
-							>
-								<History className="h-5 w-5 mr-2" />
-								Историја
-							</Link>
-						)}
 					</nav>
 					<div className="px-6 py-4">
 						<button
@@ -193,6 +291,7 @@ export const Layout = ({ children, onLogout }) => {
 			</div>
 			{/* Mobile Main */}
 			<div className="sm:hidden flex-1">{children}</div>
+			<ConnectionStatus />
 		</div>
 	)
 }

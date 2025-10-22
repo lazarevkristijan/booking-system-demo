@@ -1,5 +1,14 @@
 import axios from "axios"
-import { Calendar, History, Scissors, UserCheck, Users } from "lucide-react"
+import {
+	Building2,
+	Calendar,
+	History,
+	Scissors,
+	Shield,
+	UserCheck,
+	Users,
+	UsersRound,
+} from "lucide-react"
 
 export const SERVER_API = `${
 	import.meta.env.VITE_SERVER_PORT ? `http://` : ""
@@ -132,10 +141,6 @@ function getErrorMessage(error) {
 }
 
 // MISC
-export const capitalize = (string) => {
-	return string[0].toUpperCase() + string.slice(1)
-}
-
 export const navItems = [
 	{
 		name: "Табло",
@@ -156,6 +161,32 @@ export const navItems = [
 		name: "Клиенти",
 		path: "/clients",
 		icon: UserCheck,
+	},
+]
+// Admin-only nav items
+export const adminNavItems = [
+	{
+		name: "Корисници",
+		path: "/users",
+		icon: Shield,
+	},
+	{
+		name: "Историја",
+		path: "/history",
+		icon: History,
+	},
+]
+// SUPERADMIN NAV ITEMS
+export const superadminNavItems = [
+	{
+		name: "Организации",
+		path: "/superadmin/organizations",
+		icon: Building2,
+	},
+	{
+		name: "Сите Корисници",
+		path: "/superadmin/users",
+		icon: UsersRound,
 	},
 ]
 
@@ -303,9 +334,15 @@ export const postServiceFrompage = async (services, setServices, formData) => {
 }
 
 // CLIENTS
-export const getClients = async () => {
+// CLIENTS - Update to support pagination
+export const getClients = async (page = 1, limit = 50, searchTerm = "") => {
+	const params = new URLSearchParams()
+	params.append("page", page)
+	params.append("limit", limit)
+	if (searchTerm) params.append("q", searchTerm)
+
 	return await axios
-		.get(`${SERVER_API}/clients`)
+		.get(`${SERVER_API}/clients?${params.toString()}`)
 		.then((res) => res.data)
 		.catch((e) => createErrorModal(e))
 }
@@ -322,8 +359,8 @@ export const createClientFromModal = async (selectedData) => {
 
 export const searchClientsApi = async (name) => {
 	return await axios
-		.get(`${SERVER_API}/clients/?q=${encodeURIComponent(name)}`)
-		.then((res) => res.data)
+		.get(`${SERVER_API}/clients/?q=${encodeURIComponent(name)}&limit=20`)
+		.then((res) => res.data.clients || res.data)
 		.catch((e) => createErrorModal(e))
 }
 
@@ -340,12 +377,14 @@ export const getSingleClientHistory = (allHistory, clientId) => {
 export const deleteClientFromClientsPage = async (
 	client,
 	clients,
-	setClients
+	onSuccess // Change from setClients to onSuccess callback
 ) => {
 	await axios
 		.delete(`${SERVER_API}/clients/${client._id}`)
 		.then(() => {
-			setClients(clients.filter((cli) => cli._id !== client._id))
+			if (typeof onSuccess === "function") {
+				onSuccess()
+			}
 		})
 		.catch((e) => {
 			createErrorModal(e)
@@ -356,50 +395,31 @@ export const patchEditClient = async (
 	selectedClient,
 	formData,
 	clients,
-	setClients
+	onSuccess // Change from setClients to onSuccess callback
 ) => {
 	await axios
 		.put(`${SERVER_API}/clients/${selectedClient._id}`, formData, {
 			headers: { "Content-Type": "application/json" },
 		})
 		.then(() => {
-			setClients(
-				clients.map((cli) =>
-					cli._id === selectedClient._id
-						? {
-								...cli,
-								full_name: formData.full_name,
-								phone: formData.phone,
-								notes: formData.notes,
-								updatedAt: new Date()
-									.toISOString()
-									.split("T")[0],
-						  }
-						: cli
-				)
-			)
+			if (typeof onSuccess === "function") {
+				onSuccess()
+			}
 		})
 		.catch((e) => {
 			createErrorModal(e)
 		})
 }
 
-export const postNewClientFromPage = async (formData, clients, setClients) => {
+export const postNewClientFromPage = async (formData, clients, onSuccess) => {
 	await axios
 		.post(`${SERVER_API}/clients`, formData, {
 			headers: { "Content-Type": "application/json" },
 		})
-		.then((res) => {
-			const newClient = {
-				_id: res.data._id,
-				full_name: res.data.full_name,
-				phone: res.data.phone,
-				notes: res.data.notes,
-				createdAt: res.data.createdAt,
-				updatedAt: res.data.updatedAt,
-				isHidden: false,
+		.then(() => {
+			if (typeof onSuccess === "function") {
+				onSuccess()
 			}
-			setClients([newClient, ...clients])
 		})
 		.catch((e) => {
 			createErrorModal(e)
@@ -475,4 +495,127 @@ export const getCurrentUser = async () => {
 			// Don't show error modal for this, just return null
 			return null
 		})
+}
+
+// USER MANAGEMENT (Admin only)
+export const getUsers = async () => {
+	return await axios
+		.get(`${SERVER_API}/users`)
+		.then((res) => res.data)
+		.catch((e) => createErrorModal(e))
+}
+
+export const createUser = async (userData) => {
+	return await axios
+		.post(`${SERVER_API}/users`, userData)
+		.then((res) => res.data)
+		.catch((e) => createErrorModal(e))
+}
+
+export const updateUser = async (id, userData) => {
+	return await axios
+		.put(`${SERVER_API}/users/${id}`, userData)
+		.then((res) => res.data)
+		.catch((e) => createErrorModal(e))
+}
+
+export const deleteUser = async (id) => {
+	return await axios
+		.delete(`${SERVER_API}/users/${id}`)
+		.then((res) => res.data)
+		.catch((e) => createErrorModal(e))
+}
+
+// export const exportToCSV = (data, filename) => {
+// 	if (!data || data.length === 0) return
+
+// 	const headers = Object.keys(data[0])
+// 	const csvContent = [
+// 		headers.join(","),
+// 		...data.map(row =>
+// 			headers.map(header => {
+// 				const value = row[header]
+// 				// Escape commas and quotes
+// 				return typeof value === "string" && value.includes(",")
+// 					? `"${value.replace(/"/g, '""')}"`
+// 					: value
+// 			}).join(",")
+// 		)
+// 	].join("\n")
+
+// 	const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+// 	const link = document.createElement("a")
+// 	link.href = URL.createObjectURL(blob)
+// 	link.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`
+// 	link.click()
+// }
+
+// Usage:
+// exportToCSV(clients, "clients")
+
+// SUPERADMIN - Organizations
+export const getAllOrganizations = async () => {
+	return await axios
+		.get(`${SERVER_API}/organizations`)
+		.then((res) => res.data)
+		.catch((e) => createErrorModal(e))
+}
+
+export const createOrganization = async (orgData) => {
+	return await axios
+		.post(`${SERVER_API}/organizations`, orgData)
+		.then((res) => res.data)
+		.catch((e) => createErrorModal(e))
+}
+
+export const updateOrganization = async (id, orgData) => {
+	return await axios
+		.put(`${SERVER_API}/organizations/${id}`, orgData)
+		.then((res) => res.data)
+		.catch((e) => createErrorModal(e))
+}
+
+export const deleteOrganization = async (id) => {
+	return await axios
+		.delete(`${SERVER_API}/organizations/${id}`)
+		.then((res) => res.data)
+		.catch((e) => createErrorModal(e))
+}
+
+// SUPERADMIN - All Users
+export const getAllUsers = async (
+	page = 1,
+	limit = 50,
+	organizationId = null
+) => {
+	const params = new URLSearchParams()
+	params.append("page", page)
+	params.append("limit", limit)
+	if (organizationId) params.append("organizationId", organizationId)
+
+	return await axios
+		.get(`${SERVER_API}/superadmin/users?${params.toString()}`)
+		.then((res) => res.data)
+		.catch((e) => createErrorModal(e))
+}
+
+export const createUserInOrg = async (userData) => {
+	return await axios
+		.post(`${SERVER_API}/superadmin/users`, userData)
+		.then((res) => res.data)
+		.catch((e) => createErrorModal(e))
+}
+
+export const updateUserInOrg = async (id, userData) => {
+	return await axios
+		.put(`${SERVER_API}/superadmin/users/${id}`, userData)
+		.then((res) => res.data)
+		.catch((e) => createErrorModal(e))
+}
+
+export const deleteUserFromOrg = async (id) => {
+	return await axios
+		.delete(`${SERVER_API}/superadmin/users/${id}`)
+		.then((res) => res.data)
+		.catch((e) => createErrorModal(e))
 }

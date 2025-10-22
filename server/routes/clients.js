@@ -7,16 +7,51 @@ const { logAction } = require("../utils/logger.js")
 // GET /api/clients - List only active if query parameter not provided
 router.get("/", async (req, res) => {
 	try {
-		const { q, showHidden } = req.query
+		const { q, showHidden, page = 1, limit = 50 } = req.query
 		let query = showHidden === "true" ? {} : { isHidden: false }
 
+		// Search by name or phone
 		if (q) {
-			query.full_name = { $regex: q, $options: "i" }
+			query.$or = [
+				{ full_name: { $regex: q, $options: "i" } },
+				{ phone: { $regex: q, $options: "i" } },
+			]
 		}
 
-		const clients = await Client.find(query).sort({ full_name: 1 })
+		const organizationId = req.organizationId // From auth middleware
+		if (!organizationId) {
+			return res.status(400).json({
+				error: "Идентификатор на организација е задолжителен",
+			})
+		}
 
-		res.json(clients)
+		query.organizationId = organizationId
+
+		// Calculate pagination
+		const pageNum = Math.max(parseInt(page), 1)
+		const limitNum = Math.min(Math.max(parseInt(limit), 1), 100) // max 100 per page
+		const skip = (pageNum - 1) * limitNum
+
+		// Execute query with pagination
+		const [clients, total] = await Promise.all([
+			Client.find(query)
+				.sort({ full_name: 1 })
+				.skip(skip)
+				.limit(limitNum)
+				.lean(), // lean() for better performance
+			Client.countDocuments(query),
+		])
+
+		res.json({
+			clients,
+			pagination: {
+				page: pageNum,
+				limit: limitNum,
+				total,
+				totalPages: Math.ceil(total / limitNum),
+				hasMore: pageNum * limitNum < total,
+			},
+		})
 	} catch (error) {
 		console.error("Error fetching clients:", error)
 		res.status(500).json({ error: "Грешка во серверот" })
@@ -26,7 +61,14 @@ router.get("/", async (req, res) => {
 // GET /api/clients/all/history - Get all clients history (including hidden)
 router.get("/all/history", async (req, res) => {
 	try {
-		const bookings = await Booking.find()
+		const organizationId = req.organizationId // From auth middleware
+		if (!organizationId) {
+			return res.status(400).json({
+				error: "Идентификатор на организација е задолжителен",
+			})
+		}
+
+		const bookings = await Booking.find({ organizationId })
 			.populate("employee_id", "name isHidden")
 			.populate("services", "name isHidden")
 			.populate("client_id", "full_name phone isHidden")
@@ -63,7 +105,10 @@ router.get("/all/history", async (req, res) => {
 // GET /api/clients/:id - Get single client (even if hidden)
 router.get("/:id", async (req, res) => {
 	try {
-		const client = await Client.findById(req.params.id)
+		const client = await Client.findOne({
+			_id: req.params.id,
+			organizationId: req.organizationId,
+		})
 
 		if (!client) {
 			return res.status(404).json({ error: "Клиентот не е пронајден" })
@@ -82,13 +127,20 @@ router.get("/:id/history", async (req, res) => {
 		const { id } = req.params
 
 		// First verify client exists
-		const client = await Client.findById(id)
+		const client = await Client.findOne({
+			_id: req.params.id,
+			organizationId: req.organizationId,
+		})
+
 		if (!client) {
 			return res.status(404).json({ error: "Клиентот не е пронајден" })
 		}
 
 		// Get booking history with services and employee info
-		const bookings = await Booking.find({ client_id: id })
+		const bookings = await Booking.find({
+			client_id: id,
+			organizationId: req.organizationId,
+		})
 			.populate("employee_id", "name isHidden")
 			.populate("services", "name isHidden")
 			.sort({ start_time: -1 })
@@ -130,7 +182,14 @@ router.post("/", async (req, res) => {
 				error: "Полето за телефон е задолжително и треба да содржи само бројки 0-9 без празни места",
 			})
 		}
-		if (await Client.findOne({ phone: phone })) {
+
+		const organizationId = req.organizationId // From auth middleware
+		if (!organizationId) {
+			return res.status(400).json({
+				error: "Идентификатор на организација е задолжителен",
+			})
+		}
+		if (await Client.findOne({ phone: phone, organizationId })) {
 			return res.status(400).json({
 				error: "Веќе постои клиент со овој телефонски број",
 			})
@@ -140,6 +199,7 @@ router.post("/", async (req, res) => {
 			full_name: full_name.trim(),
 			phone: phone.trim(),
 			notes: notes || "",
+			organizationId,
 		})
 
 		await client.save()
@@ -166,7 +226,6 @@ router.put("/:id", async (req, res) => {
 		const { id } = req.params
 		const { full_name, phone, notes, isHidden } = req.body
 
-		// Validation
 		if (!full_name || full_name.trim() === "" || isHidden === undefined) {
 			return res.status(400).json({
 				error: "Полињата за име и за активност на клиентот се задолжителни",
@@ -179,9 +238,26 @@ router.put("/:id", async (req, res) => {
 		}
 
 		clientFromId = await Client.findOne({ _id: id })
+		// SECURITY: Verify client belongs to user's organization
+		if (!clientFromId) {
+			return res.status(404).json({ error: "Клиентот не е пронајден" })
+		}
+		if (
+			clientFromId.organizationId.toString() !==
+			req.organizationId.toString()
+		) {
+			return res
+				.status(403)
+				.json({ error: "Немате пристап до овој клиент" })
+		}
 
 		if (clientFromId.phone !== phone) {
-			if (await Client.findOne({ phone: phone })) {
+			if (
+				await Client.findOne({
+					phone: phone,
+					organizationId: req.organizationId,
+				})
+			) {
 				return res.status(400).json({
 					error: "Веќе постои клиент со овој телефонски број",
 				})
@@ -195,7 +271,6 @@ router.put("/:id", async (req, res) => {
 			{
 				full_name: full_name.trim(),
 				phone: phone.trim(),
-				isHidden: isHidden,
 				notes: notes || "",
 			},
 			{ new: true, runValidators: true }
@@ -225,7 +300,15 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
 	try {
 		const { id } = req.params
+		// Check if employee belongs to user's organization
+		const client = await Employee.findOne({
+			_id: id,
+			organizationId: req.organizationId,
+		})
 
+		if (!employee) {
+			return res.status(404).json({ error: "Клиентот не е пронајден" })
+		}
 		// Check if client has future bookings
 		const futureBookings = await Booking.countDocuments({
 			client_id: id,
@@ -238,15 +321,7 @@ router.delete("/:id", async (req, res) => {
 			})
 		}
 
-		const client = await Client.findByIdAndUpdate(
-			id,
-			{ isHidden: true },
-			{ new: true }
-		)
-
-		if (!client) {
-			return res.status(404).json({ error: "Клиентот не е пронајден" })
-		}
+		await Client.findByIdAndUpdate(id, { isHidden: true }, { new: true })
 
 		try {
 			await logAction(req, {
@@ -270,7 +345,7 @@ router.patch("/:id/restore", async (req, res) => {
 		const { id } = req.params
 
 		const client = await Client.findByIdAndUpdate(
-			id,
+			{ _id: id, organizationId: req.organizationId },
 			{ isHidden: false },
 			{ new: true }
 		)

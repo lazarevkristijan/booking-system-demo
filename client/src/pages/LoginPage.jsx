@@ -4,6 +4,7 @@ import { Eye, EyeOff, LogIn } from "lucide-react"
 import axios from "axios"
 axios.defaults.withCredentials = true
 import { SERVER_API } from "../constants"
+import { useQueryClient } from "@tanstack/react-query"
 
 // LoginPage component definition
 const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
@@ -12,6 +13,7 @@ const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
 	const [showPassword, setShowPassword] = useState(false)
 	const [error, setError] = useState("")
 	const [loading, setLoading] = useState(false)
+	const queryClient = useQueryClient()
 
 	const handleSubmit = async (e) => {
 		e.preventDefault()
@@ -19,6 +21,8 @@ const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
 		setLoading(true)
 
 		try {
+			queryClient.clear()
+
 			await axios
 				.post(`${SERVER_API}/auth/login`, {
 					username,
@@ -70,8 +74,7 @@ const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
 							value={username}
 							onChange={(e) => setUsername(e.target.value)}
 							className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent"
-							placeholder="admin"
-							// autoComplete="username"
+							placeholder="darko"
 						/>
 					</div>
 					<div>

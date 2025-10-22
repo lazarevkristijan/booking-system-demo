@@ -10,6 +10,15 @@ router.get("/", async (req, res) => {
 		const { showHidden } = req.query
 		const filter = showHidden === "true" ? {} : { isHidden: false }
 
+		const organizationId = req.organizationId // From auth middleware
+		if (!organizationId) {
+			return res.status(400).json({
+				error: "Идентификатор на организација е задолжителен",
+			})
+		}
+
+		filter.organizationId = organizationId
+
 		const services = await Service.aggregate([
 			{ $match: filter },
 			{
@@ -29,7 +38,10 @@ router.get("/", async (req, res) => {
 // GET /api/services/:id - Get single service (even if hidden)
 router.get("/:id", async (req, res) => {
 	try {
-		const service = await Service.findById(req.params.id)
+		const service = await Service.findOne({
+			_id: req.params.id,
+			organizationId: req.organizationId,
+		})
 
 		if (!service) {
 			return res.status(404).json({ error: "Услугата не е пронајдена" })
@@ -46,8 +58,6 @@ router.get("/:id", async (req, res) => {
 router.post("/", async (req, res) => {
 	try {
 		const { name, duration, price } = req.body
-
-		// Validation
 		if (!name || name.trim() === "") {
 			return res
 				.status(400)
@@ -64,10 +74,17 @@ router.post("/", async (req, res) => {
 				.json({ error: "Цената треба да биде број во денари" })
 		}
 
+		const organizationId = req.organizationId // From auth middleware
+		if (!organizationId) {
+			return res.status(400).json({
+				error: "Идентификатор на организација е задолжителен",
+			})
+		}
 		const service = new Service({
 			name: name.trim(),
 			duration: parseInt(duration),
 			price: parseFloat(price),
+			organizationId,
 		})
 
 		await service.save()
@@ -112,6 +129,18 @@ router.put("/:id", async (req, res) => {
 		}
 
 		const prevService = await Service.findById(id)
+		// SECURITY: Verify service belongs to user's organization
+		if (!prevService) {
+			return res.status(404).json({ error: "Услугата не е пронајдена" })
+		}
+		if (
+			prevService.organizationId.toString() !==
+			req.organizationId.toString()
+		) {
+			return res
+				.status(403)
+				.json({ error: "Немате пристап до оваа услуга" })
+		}
 
 		const service = await Service.findByIdAndUpdate(
 			id,
@@ -119,7 +148,6 @@ router.put("/:id", async (req, res) => {
 				name: name.trim(),
 				duration: parseInt(duration),
 				price: parseFloat(price),
-				isHidden,
 			},
 			{ new: true, runValidators: true }
 		)
@@ -149,6 +177,15 @@ router.delete("/:id", async (req, res) => {
 	try {
 		const { id } = req.params
 
+		const service = await Employee.findOne({
+			_id: id,
+			organizationId: req.organizationId,
+		})
+
+		if (!service) {
+			return res.status(404).json({ error: "Услугата не е пронајдена" })
+		}
+
 		// Check if service has active bookings
 		const activeBookings = await Booking.countDocuments({
 			services: id,
@@ -161,15 +198,7 @@ router.delete("/:id", async (req, res) => {
 			})
 		}
 
-		const service = await Service.findByIdAndUpdate(
-			id,
-			{ isHidden: true },
-			{ new: true }
-		)
-
-		if (!service) {
-			return res.status(404).json({ error: "Услугата не е пронајдена" })
-		}
+		await Service.findByIdAndUpdate(id, { isHidden: true }, { new: true })
 
 		try {
 			await logAction(req, {
@@ -193,7 +222,7 @@ router.patch("/:id/restore", async (req, res) => {
 		const { id } = req.params
 
 		const service = await Service.findByIdAndUpdate(
-			id,
+			{ _id: id, organizationId: req.organizationId },
 			{ isHidden: false },
 			{ new: true }
 		)

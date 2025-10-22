@@ -1,11 +1,17 @@
-import { useState } from "react"
-import { Calendar, Plus, ChevronLeft, ChevronRight, Clock } from "lucide-react"
+import { useState, useMemo, useCallback, useEffect } from "react"
+import {
+	Calendar,
+	Plus,
+	ChevronLeft,
+	ChevronRight,
+	Clock,
+	User as UserIcon,
+} from "lucide-react"
 import { BookingModal } from "../components/BookingModal"
 import axios from "axios"
 axios.defaults.withCredentials = true
-import { getBookings, getEmployees, capitalize } from "../constants"
+import { getBookings, getEmployees } from "../constants"
 import { useQuery } from "@tanstack/react-query"
-import { useEffect } from "react"
 import BookingDetailsModal from "../components/BookingDetailsModal"
 
 export const DashboardPage = () => {
@@ -20,18 +26,64 @@ export const DashboardPage = () => {
 	const [viewMode, setViewMode] = useState("month")
 	const [selectedEmployeeId, setSelectedEmployeeId] = useState(null)
 
-	const { data: allBookings = [] } = useQuery({
-		queryKey: ["all_bookings", selectedDate],
+	const mkMonthNames = [
+		"Јануари",
+		"Февруари",
+		"Март",
+		"Април",
+		"Мај",
+		"Јуни",
+		"Јули",
+		"Август",
+		"Септември",
+		"Октомври",
+		"Ноември",
+		"Декември",
+	]
+	const mkWeekdayNames = [
+		"Недела", // Sunday
+		"Понеделник", // Monday
+		"Вторник", // Tuesday
+		"Среда", // Wednesday
+		"Четврток", // Thursday
+		"Петок", // Friday
+		"Сабота", // Saturday
+	]
+	const formatDateMK = (date, options = {}) => {
+		const day = date.getDate()
+		const month = mkMonthNames[date.getMonth()]
+		const year = date.getFullYear()
+		const weekday = mkWeekdayNames[date.getDay()]
+
+		if (options.full) {
+			// Full format: "Понеделник, 21 Јануари 2025"
+			return `${weekday}, ${day} ${month} ${year}`
+		} else if (options.weekday) {
+			// With weekday: "Понеделник, 21 Јануари 2025"
+			return `${weekday}, ${day} ${month} ${year}`
+		} else {
+			// Simple format: "21 Јануари 2025"
+			return `${day} ${month} ${year}`
+		}
+	}
+
+	const { data: allBookings = [], isLoading: bookingsLoading } = useQuery({
+		queryKey: [
+			"all_bookings",
+			selectedDate.getMonth(),
+			selectedDate.getFullYear(),
+		],
 		queryFn: () =>
 			getBookings(
 				selectedDate.getMonth() + 1,
 				selectedDate.getFullYear()
 			),
+		keepPreviousData: true,
 		refetchInterval: 30000,
 		refetchIntervalInBackground: false,
 	})
 
-	const { data: allEmployees = [] } = useQuery({
+	const { data: allEmployees = [], isLoading: employeesLoading } = useQuery({
 		queryKey: ["all_employees"],
 		queryFn: getEmployees,
 	})
@@ -40,16 +92,34 @@ export const DashboardPage = () => {
 		if (JSON.stringify(bookings) !== JSON.stringify(allBookings)) {
 			setBookings(allBookings)
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [allBookings])
 
+	useEffect(() => {
+		if (
+			viewMode === "day" &&
+			allEmployees.length === 1 &&
+			!selectedEmployeeId
+		) {
+			setSelectedEmployeeId(allEmployees[0]._id)
+		}
+	}, [viewMode, allEmployees, selectedEmployeeId])
+
 	// Handler for adding new booking to state
-	const handleBookingCreated = (newBooking) => {
+	const handleBookingCreated = useCallback((newBooking) => {
 		if (newBooking !== null) {
 			setBookings((prevBookings) => [...prevBookings, newBooking])
 		}
 		setShowBookingModal(false)
 		setViewMode("month")
-	}
+	}, [])
+	const handleBookingDeleted = useCallback((bookingId) => {
+		setBookings((prevBookings) =>
+			prevBookings.filter((b) => b._id !== bookingId)
+		)
+		setShowBookingDetailsModal(false)
+		setSelectedBooking(null)
+	}, [])
 
 	const timeSlots = Array.from({ length: 25 }, (_, i) => {
 		const hour = Math.floor(8 + i / 2)
@@ -101,27 +171,31 @@ export const DashboardPage = () => {
 	const isSameDay = (date1, date2) =>
 		date1?.toDateString() === date2?.toDateString()
 
-	const weekDays = getWeekDays(selectedDate)
-	const monthDays = getMonthDays(selectedDate)
+	const weekDays = useMemo(() => getWeekDays(selectedDate), [selectedDate])
+	const monthDays = useMemo(() => getMonthDays(selectedDate), [selectedDate])
 
-	const getBookingsForTimeSlot = (day, timeSlot, employeeId = null) => {
-		const [hourStr, minuteStr] = timeSlot.split(":")
-		const hour = parseInt(hourStr)
-		const minute = parseInt(minuteStr)
+	const getBookingsForTimeSlot = useCallback(
+		(day, timeSlot, employeeId = null) => {
+			const [hourStr, minuteStr] = timeSlot.split(":")
+			const hour = parseInt(hourStr)
+			const minute = parseInt(minuteStr)
 
-		const slotStart = new Date(day)
-		slotStart.setHours(hour, minute, 0, 0)
-		const slotEnd = new Date(day)
-		slotEnd.setHours(hour, minute + 29, 59, 999)
+			const slotStart = new Date(day)
+			slotStart.setHours(hour, minute, 0, 0)
+			const slotEnd = new Date(day)
+			slotEnd.setHours(hour, minute + 29, 59, 999)
 
-		return bookings.filter((booking) => {
-			const bookingDate = new Date(booking.startTime)
-			const timeMatch = bookingDate >= slotStart && bookingDate <= slotEnd
-			const employeeMatch =
-				employeeId === null || booking.employee?._id === employeeId
-			return timeMatch && employeeMatch
-		})
-	}
+			return bookings.filter((booking) => {
+				const bookingDate = new Date(booking.startTime)
+				const timeMatch =
+					bookingDate >= slotStart && bookingDate <= slotEnd
+				const employeeMatch =
+					employeeId === null || booking.employee?._id === employeeId
+				return timeMatch && employeeMatch
+			})
+		},
+		[bookings]
+	)
 
 	const handleTimeSlotClick = (day, timeSlot, employeeId = null) => {
 		const [hourStr, minuteStr] = timeSlot.split(":")
@@ -135,21 +209,38 @@ export const DashboardPage = () => {
 		setShowBookingModal(true)
 	}
 
-	const navigateDay = (direction) => {
-		const newDate = new Date(selectedDate)
-		newDate.setDate(selectedDate.getDate() + direction)
-		setSelectedDate(newDate)
-	}
+	const navigateDay = useCallback((direction) => {
+		setSelectedDate((prevDate) => {
+			const newDate = new Date(prevDate)
+			newDate.setDate(prevDate.getDate() + direction)
+			return newDate
+		})
+	}, [])
 
-	const navigateWeek = (direction) => {
-		const newDate = new Date(selectedDate)
-		newDate.setDate(selectedDate.getDate() + direction * 7)
-		setSelectedDate(newDate)
-	}
+	const navigateWeek = useCallback((direction) => {
+		setSelectedDate((prevDate) => {
+			const newDate = new Date(prevDate)
+			newDate.setDate(prevDate.getDate() + direction * 7)
+			return newDate
+		})
+	}, [])
 
 	const isToday = (date) => {
 		const today = new Date()
 		return date.toDateString() === today.toDateString()
+	}
+
+	if (bookingsLoading || employeesLoading) {
+		return (
+			<div className="p-4 sm:p-6">
+				<div className="max-w-7xl mx-auto">
+					<div className="animate-pulse space-y-4">
+						<div className="h-8 bg-slate-200 rounded w-1/4"></div>
+						<div className="h-96 bg-slate-200 rounded"></div>
+					</div>
+				</div>
+			</div>
+		)
 	}
 
 	return (
@@ -199,15 +290,12 @@ export const DashboardPage = () => {
 											<ChevronLeft className="h-5 w-5 text-slate-500" />
 										</button>
 										<h2 className="text-lg sm:text-xl font-semibold text-slate-800 font-poppins">
-											{capitalize(
-												selectedDate.toLocaleDateString(
-													"mk-MK",
-													{
-														month: "long",
-														year: "numeric",
-													}
-												)
-											)}
+											{
+												mkMonthNames[
+													selectedDate.getMonth()
+												]
+											}{" "}
+											{selectedDate.getFullYear()}
 										</h2>
 										<button
 											onClick={() =>
@@ -337,12 +425,7 @@ export const DashboardPage = () => {
 						<>
 							<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 sm:px-6 py-4 border-b border-slate-200">
 								<h2 className="text-lg sm:text-xl font-semibold text-slate-800 font-poppins truncate">
-									Недела на{" "}
-									{weekDays[0].toLocaleDateString("mk-MK", {
-										month: "long",
-										day: "numeric",
-										year: "numeric",
-									})}
+									Недела на {formatDateMK(weekDays[0])}
 								</h2>
 								<div className="flex items-center justify-center sm:justify-end gap-2">
 									<button
@@ -544,24 +627,17 @@ export const DashboardPage = () => {
 						</>
 					) : (
 						<>
+							{/* Daily View Header */}
 							<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 sm:px-6 py-4 border-b border-slate-200">
-								<h2 className="text-lg sm:text-xl font-semibold text-slate-800">
-									{capitalize(
-										selectedDate.toLocaleDateString(
-											"mk-MK",
-											{
-												weekday: "long",
-												day: "numeric",
-												month: "numeric",
-												year: "numeric",
-											}
-										)
-									)}
+								<h2 className="text-lg sm:text-xl font-semibold text-slate-800 font-poppins">
+									{formatDateMK(selectedDate, {
+										weekday: true,
+									})}
 								</h2>
-								<div className="flex gap-2">
+								<div className="flex items-center justify-between sm:justify-end gap-2">
 									<button
 										onClick={() => navigateDay(-1)}
-										className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+										className="p-3 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors touch-manipulation"
 									>
 										<ChevronLeft className="h-5 w-5" />
 									</button>
@@ -569,52 +645,94 @@ export const DashboardPage = () => {
 										onClick={() =>
 											setSelectedDate(new Date())
 										}
-										className="px-3 py-2 text-sm hover:bg-slate-100 rounded-lg transition-colors"
+										className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors touch-manipulation min-h-[44px]"
 									>
 										Денес
 									</button>
 									<button
 										onClick={() => navigateDay(1)}
-										className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+										className="p-3 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors touch-manipulation"
 									>
 										<ChevronRight className="h-5 w-5" />
 									</button>
 								</div>
 							</div>
 
-							{/* Calendar Grid */}
-							<div className="overflow-x-auto">
+							{/* Mobile: Employee Selector Dropdown */}
+							{allEmployees.length > 1 ? (
+								<div className="sm:hidden px-4 py-3 border-b border-slate-200 bg-slate-50">
+									<label className="block text-sm font-medium text-slate-700 mb-2">
+										Избери вработен
+									</label>
+									<select
+										value={selectedEmployeeId || "all"}
+										onChange={(e) =>
+											setSelectedEmployeeId(
+												e.target.value === "all"
+													? null
+													: e.target.value
+											)
+										}
+										className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent bg-white"
+									>
+										<option value="all">
+											Сите вработени
+										</option>
+										{allEmployees.map((emp) => (
+											<option
+												key={emp._id}
+												value={emp._id}
+											>
+												{emp.name}
+											</option>
+										))}
+									</select>
+								</div>
+							) : allEmployees.length === 1 ? (
+								<div className="sm:hidden px-4 py-3 border-b border-slate-200 bg-slate-50">
+									<div className="flex items-center gap-2">
+										<UserIcon className="h-5 w-5 text-slate-600" />
+										<span className="text-base font-medium text-slate-800">
+											{allEmployees[0].name}
+										</span>
+									</div>
+								</div>
+							) : null}
+
+							{/* Desktop: Horizontal Grid with All Employees */}
+							<div className="hidden sm:block overflow-x-auto">
 								<div className="min-w-[800px]">
 									{/* Header row with employee names */}
 									<div
 										className="grid border-b border-slate-200 sticky top-0 bg-white z-20"
 										style={{
-											gridTemplateColumns: `70px repeat(${allEmployees.length}, 1fr)`,
+											gridTemplateColumns: `80px repeat(${allEmployees.length}, minmax(120px, 1fr))`,
 										}}
 									>
-										<div className="p-3 text-slate-500 font-medium">
+										<div className="p-3 text-sm font-medium text-slate-500 border-r border-slate-200 sticky left-0 bg-white z-30">
 											Час
 										</div>
 										{allEmployees.map((emp) => (
 											<div
 												key={emp._id}
-												className="p-3 text-center font-medium border-l border-slate-200"
+												className="p-3 text-center font-medium text-slate-700 border-l border-slate-200 truncate"
+												title={emp.name}
 											>
 												{emp.name}
 											</div>
 										))}
 									</div>
 
-									{/* Time Slots */}
+									{/* Time Slots - Desktop */}
 									{timeSlots.map((time) => (
 										<div
 											key={time}
-											className="grid border-b border-slate-200 sticky top-0 bg-white z-20"
+											className="grid border-b border-slate-200"
 											style={{
-												gridTemplateColumns: `70px repeat(${allEmployees.length}, 1fr)`,
+												gridTemplateColumns: `80px repeat(${allEmployees.length}, minmax(120px, 1fr))`,
 											}}
 										>
-											<div className="p-3 text-slate-500 border-r border-slate-200 sticky left-[-1px] bg-white z-10">
+											<div className="p-3 text-sm font-medium text-slate-500 border-r border-slate-200 sticky left-0 bg-white z-10">
 												{time}
 											</div>
 											{allEmployees.map((emp) => {
@@ -627,89 +745,108 @@ export const DashboardPage = () => {
 												return (
 													<div
 														key={emp._id}
-														className="border-l border-slate-200 min-h-[64px] p-1 hover:bg-slate-50 transition-colors cursor-pointer"
-														onClick={() =>
-															handleTimeSlotClick(
-																selectedDate,
-																time,
-																emp._id
-															)
-														}
+														className="border-l border-slate-200 min-h-[70px] relative"
 													>
-														{slotBookings.map(
-															(booking) => (
-																<div
-																	key={
-																		booking._id
-																	}
-																	className="bg-blue-100 border border-blue-200 rounded p-2 text-xs mb-1 cursor-pointer hover:bg-blue-200 transition-colors"
-																	onClick={(
-																		e
-																	) => {
-																		e.stopPropagation()
-																		setSelectedBooking(
-																			booking
-																		)
-																		setShowBookingDetailsModal(
-																			true
-																		)
-																	}}
-																>
-																	<div className="font-medium text-blue-800 truncate">
-																		{
-																			booking
-																				.client
-																				?.name
-																		}
-																	</div>
-																	<div className="text-blue-600">
-																		{booking.services
-																			.map(
-																				(
-																					srv
-																				) =>
-																					srv.name
-																			)
-																			.join(
-																				", "
-																			)}
-																	</div>
-																	<div className="text-blue-500 text-xs">
-																		{
-																			booking
-																				.employee
-																				.name
-																		}
-																	</div>
-																	<div className="text-blue-500 text-xs">
-																		До{" "}
-																		{String(
-																			new Date(
-																				booking.endTime
-																			).getHours()
-																		).padStart(
-																			2,
-																			"0"
-																		)}
-																		:
-																		{String(
-																			new Date(
-																				booking.endTime
-																			).getMinutes()
-																		).padStart(
-																			2,
-																			"0"
-																		)}
-																		ч
-																	</div>
-																</div>
-															)
-														)}
-														{slotBookings.length ===
-															0 && (
-															<div className="h-full w-full flex items-center justify-center text-slate-400 text-xs">
-																{emp.name}
+														{slotBookings.length >
+														0 ? (
+															<div className="p-2 space-y-1">
+																{slotBookings.map(
+																	(
+																		booking
+																	) => (
+																		<div
+																			key={
+																				booking._id
+																			}
+																			className="bg-blue-100 border border-blue-200 rounded p-2 text-xs cursor-pointer hover:bg-blue-200 transition-colors"
+																			onClick={(
+																				e
+																			) => {
+																				e.stopPropagation()
+																				setSelectedBooking(
+																					booking
+																				)
+																				setShowBookingDetailsModal(
+																					true
+																				)
+																			}}
+																		>
+																			<div
+																				className="font-medium text-blue-900 truncate"
+																				title={
+																					booking
+																						.client
+																						?.name
+																				}
+																			>
+																				{
+																					booking
+																						.client
+																						?.name
+																				}
+																			</div>
+																			<div
+																				className="text-blue-700 truncate"
+																				title={booking.services
+																					.map(
+																						(
+																							s
+																						) =>
+																							s.name
+																					)
+																					.join(
+																						", "
+																					)}
+																			>
+																				{booking.services
+																					.map(
+																						(
+																							s
+																						) =>
+																							s.name
+																					)
+																					.join(
+																						", "
+																					)}
+																			</div>
+																			<div className="text-blue-600 text-xs mt-1">
+																				До{" "}
+																				{String(
+																					new Date(
+																						booking.endTime
+																					).getHours()
+																				).padStart(
+																					2,
+																					"0"
+																				)}
+
+																				:
+																				{String(
+																					new Date(
+																						booking.endTime
+																					).getMinutes()
+																				).padStart(
+																					2,
+																					"0"
+																				)}
+																			</div>
+																		</div>
+																	)
+																)}
 															</div>
+														) : (
+															<button
+																onClick={() =>
+																	handleTimeSlotClick(
+																		selectedDate,
+																		time,
+																		emp._id
+																	)
+																}
+																className="w-full h-full hover:bg-slate-50 transition-colors group flex items-center justify-center"
+															>
+																<Plus className="h-5 w-5 text-slate-300 group-hover:text-slate-500" />
+															</button>
 														)}
 													</div>
 												)
@@ -717,6 +854,165 @@ export const DashboardPage = () => {
 										</div>
 									))}
 								</div>
+							</div>
+
+							{/* Mobile: Vertical Timeline View */}
+							<div className="sm:hidden">
+								{timeSlots.map((time) => {
+									const slotBookings = getBookingsForTimeSlot(
+										selectedDate,
+										time,
+										selectedEmployeeId
+									)
+
+									// Skip empty time slots if no employee selected and no bookings
+									if (
+										!selectedEmployeeId &&
+										slotBookings.length === 0
+									) {
+										return null
+									}
+
+									return (
+										<div
+											key={time}
+											className="border-b border-slate-200 hover:bg-slate-50 transition-colors"
+										>
+											<div className="flex">
+												{/* Time Column */}
+												<div className="w-20 flex-shrink-0 p-4 text-sm font-medium text-slate-500 border-r border-slate-200 bg-slate-50">
+													{time}
+												</div>
+
+												{/* Content Column */}
+												<div className="flex-1 p-3">
+													{slotBookings.length > 0 ? (
+														<div className="space-y-2">
+															{slotBookings.map(
+																(booking) => (
+																	<div
+																		key={
+																			booking._id
+																		}
+																		className="bg-blue-100 border border-blue-200 rounded-lg p-3 cursor-pointer hover:bg-blue-200 transition-colors active:scale-98"
+																		onClick={() => {
+																			setSelectedBooking(
+																				booking
+																			)
+																			setShowBookingDetailsModal(
+																				true
+																			)
+																		}}
+																	>
+																		<div className="flex items-start justify-between mb-2">
+																			<div className="font-semibold text-blue-900">
+																				{
+																					booking
+																						.client
+																						?.name
+																				}
+																			</div>
+																			<div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+																				{String(
+																					new Date(
+																						booking.startTime
+																					).getHours()
+																				).padStart(
+																					2,
+																					"0"
+																				)}
+
+																				:
+																				{String(
+																					new Date(
+																						booking.startTime
+																					).getMinutes()
+																				).padStart(
+																					2,
+																					"0"
+																				)}
+																				{
+																					" - "
+																				}
+																				{String(
+																					new Date(
+																						booking.endTime
+																					).getHours()
+																				).padStart(
+																					2,
+																					"0"
+																				)}
+
+																				:
+																				{String(
+																					new Date(
+																						booking.endTime
+																					).getMinutes()
+																				).padStart(
+																					2,
+																					"0"
+																				)}
+																			</div>
+																		</div>
+																		<div className="text-sm text-blue-800 mb-1">
+																			{booking.services
+																				.map(
+																					(
+																						s
+																					) =>
+																						s.name
+																				)
+																				.join(
+																					", "
+																				)}
+																		</div>
+																		<div className="text-xs text-blue-600 flex items-center">
+																			<UserIcon className="h-3 w-3 mr-1" />
+																			{
+																				booking
+																					.employee
+																					?.name
+																			}
+																		</div>
+																	</div>
+																)
+															)}
+															<button
+																onClick={() =>
+																	handleTimeSlotClick(
+																		selectedDate,
+																		time,
+																		selectedEmployeeId
+																	)
+																}
+																className="w-full py-3 bg-slate-50 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-medium transition-colors flex items-center justify-center"
+															>
+																<Plus className="h-4 w-4 mr-2" />
+																Додади термин
+															</button>
+														</div>
+													) : (
+														<button
+															onClick={() =>
+																handleTimeSlotClick(
+																	selectedDate,
+																	time,
+																	selectedEmployeeId
+																)
+															}
+															className="w-full py-4 bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-lg transition-colors flex items-center justify-center touch-manipulation"
+														>
+															<Plus className="h-5 w-5 mr-2" />
+															<span className="text-sm">
+																Слободен термин
+															</span>
+														</button>
+													)}
+												</div>
+											</div>
+										</div>
+									)
+								})}
 							</div>
 						</>
 					)}
@@ -732,7 +1028,7 @@ export const DashboardPage = () => {
 						</div>
 						<div className="ml-3 sm:ml-4 min-w-0">
 							<p className="text-xs sm:text-sm font-medium text-slate-500 truncate">
-								Денешни Резервации
+								Термини Денес
 							</p>
 							<p className="text-xl sm:text-2xl font-bold text-slate-800">
 								{
@@ -798,11 +1094,7 @@ export const DashboardPage = () => {
 				isOpen={showBookingDetailsModal}
 				onClose={() => setShowBookingDetailsModal(false)}
 				booking={selectedBooking}
-				onDeleted={(deletedId) => {
-					setBookings((prev) =>
-						prev.filter((b) => b._id !== deletedId)
-					)
-				}}
+				onDeleted={handleBookingDeleted}
 			/>
 		</div>
 	)

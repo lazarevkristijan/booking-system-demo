@@ -8,7 +8,9 @@ const { logAction } = require("../utils/logger.js")
 router.get("/", async (req, res) => {
 	try {
 		const { start_date, end_date, month, year } = req.query
-		let query = {}
+		const organizationId = req.organizationId // From auth middleware
+
+		let query = { organizationId }
 		let bookings = []
 
 		if (start_date && end_date) {
@@ -62,7 +64,10 @@ router.get("/", async (req, res) => {
 // GET /api/bookings/:id - Get single booking
 router.get("/:id", async (req, res) => {
 	try {
-		const booking = await Booking.findById(req.params.id)
+		const booking = await Booking.findOne({
+			_id: req.params.id,
+			organizationId: req.organizationId,
+		})
 			.populate("employee_id", "name")
 			.populate("client_id", "full_name phone")
 			.populate("services", "name duration price")
@@ -103,6 +108,8 @@ router.get("/:id", async (req, res) => {
 // POST /api/bookings - Create new booking with multiple services
 router.post("/", async (req, res) => {
 	try {
+		const organizationId = req.organizationId // From auth middleware
+
 		const {
 			employee_id,
 			client_id,
@@ -130,6 +137,7 @@ router.post("/", async (req, res) => {
 
 		// Check for overlapping bookings
 		const overlappingBooking = await Booking.findOne({
+			organizationId, // FILTER BY ORGANIZATION
 			employee_id,
 			$or: [
 				{
@@ -153,6 +161,7 @@ router.post("/", async (req, res) => {
 
 		// Create booking
 		const booking = new Booking({
+			organizationId,
 			employee_id,
 			client_id,
 			start_time: new Date(start_time),
@@ -214,7 +223,10 @@ router.delete("/:id", async (req, res) => {
 	try {
 		const { id } = req.params
 
-		const prevBooking = await Booking.findById(id)
+		const prevBooking = await Booking.findOne({
+			_id: id,
+			organizationId: req.organizationId,
+		})
 			.populate("employee_id", "name")
 			.populate("client_id", "full_name phone")
 			.populate("services", "name duration price")

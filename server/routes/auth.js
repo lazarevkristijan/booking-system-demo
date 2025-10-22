@@ -4,20 +4,32 @@ const User = require("../models/User.js")
 const jwt = require("jsonwebtoken")
 const { cookieSettings, cookieSettingsNoAge } = require("../constants.js")
 const { logAction } = require("../utils/logger.js")
+const bcrypt = require("bcrypt")
 
 router.post("/login", async (req, res) => {
 	const { username, password } = req.body
-	const user = await User.findOne({ username })
+	const user = await User.findOne({ username }).populate(
+		"organizationId",
+		"name slug isActive"
+	)
 
 	if (!user)
 		return res
 			.status(401)
 			.json({ error: "Невалидно корисничко име или лозинка" })
 
-	if (password != user.password)
+	// ✅ USE BCRYPT TO COMPARE PASSWORDS
+	const isPasswordValid = await bcrypt.compare(password, user.password)
+
+	if (!isPasswordValid) {
 		return res
 			.status(401)
 			.json({ error: "Невалидно корисничко име или лозинка" })
+	}
+
+	if (!user.organizationId.isActive) {
+		return res.status(403).json({ error: "Организацијата е деактивирана" })
+	}
 
 	const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
 		expiresIn: "3d",
@@ -29,7 +41,7 @@ router.post("/login", async (req, res) => {
 
 	try {
 		await logAction(
-			{ userId: user._id },
+			{ userId: user._id, organizationId: user.organizationId._id },
 			{
 				action: "Најава",
 				entityType: "систем",
@@ -39,7 +51,13 @@ router.post("/login", async (req, res) => {
 		)
 	} catch {}
 
-	res.json({ message: "Успешно најавување!" })
+	res.json({
+		message: "Успешно најавување!",
+		organization: {
+			name: user.organizationId.name,
+			slug: user.organizationId.slug,
+		},
+	})
 })
 
 router.get("/logout", async (req, res) => {
@@ -70,8 +88,6 @@ router.get("/session", async (req, res) => {
 	}
 })
 
-module.exports = router
-
 router.get("/me", async (req, res) => {
 	const token = req.cookies?.token
 
@@ -81,14 +97,25 @@ router.get("/me", async (req, res) => {
 
 	try {
 		const decoded = jwt.verify(token, process.env.JWT_SECRET)
-		const user = await User.findById(decoded.id).select("username")
+		const user = await User.findById(decoded.id)
+			.select("username role")
+			.populate("organizationId", "name slug")
 
 		if (!user) {
 			return res.status(404).json({ error: "Корисникот не е пронајден" })
 		}
 
-		res.json({ username: user.username })
+		res.json({
+			username: user.username,
+			role: user.role,
+			organization: {
+				name: user.organizationId.name,
+				slug: user.organizationId.slug,
+			},
+		})
 	} catch (err) {
 		return res.status(401).json({ error: "Невалиден токен" })
 	}
 })
+
+module.exports = router

@@ -9,11 +9,12 @@ import {
 	getEmployees,
 	postNewEmployeeFromPage,
 } from "../constants"
+import { TableSkeleton } from "../components/LoadingSkeleton"
 
 export const EmployeesPage = () => {
 	const [employees, setEmployees] = useState([])
 
-	const { data: allEmployees } = useQuery({
+	const { data: allEmployees, isLoading } = useQuery({
 		queryKey: ["all_employees"],
 		queryFn: getEmployees,
 	})
@@ -71,7 +72,22 @@ export const EmployeesPage = () => {
 		setFormData({ name: "" })
 		setSelectedEmployee(null)
 	}
-
+	if (isLoading) {
+		return (
+			<div className="p-4 sm:p-6">
+				<div className="max-w-6xl mx-auto">
+					<div className="mb-6">
+						<div className="h-8 bg-slate-200 rounded w-1/4 mb-2 animate-pulse"></div>
+						<div className="h-4 bg-slate-200 rounded w-1/3 animate-pulse"></div>
+					</div>
+					<TableSkeleton
+						rows={5}
+						columns={3}
+					/>
+				</div>
+			</div>
+		)
+	}
 	return (
 		<div className="p-4 sm:p-6">
 			<div className="max-w-7xl mx-auto">

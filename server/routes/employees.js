@@ -10,6 +10,14 @@ router.get("/", async (req, res) => {
 		const { showHidden } = req.query
 		const filter = showHidden === "true" ? {} : { isHidden: false }
 
+		const organizationId = req.organizationId // From auth middleware
+		if (!organizationId) {
+			return res.status(400).json({
+				error: "Идентификатор на организација е задолжителен",
+			})
+		}
+		filter.organizationId = organizationId
+
 		const employees = await Employee.find(filter).sort({ createdAt: -1 })
 		res.json(employees)
 	} catch (error) {
@@ -22,17 +30,27 @@ router.get("/", async (req, res) => {
 router.get("/available", async (req, res) => {
 	try {
 		const { start_time, end_time } = req.query
-
 		if (!start_time || !end_time) {
 			return res.status(400).json({
 				error: "Времето за почеток и крај на услугата се задолжителни",
 			})
 		}
 
+		const organizationId = req.organizationId // From auth middleware
+		if (!organizationId) {
+			return res.status(400).json({
+				error: "Идентификатор на организација е задолжителен",
+			})
+		}
+
 		// Get all employees
-		const employees = await Employee.find({ isHidden: false })
+		const employees = await Employee.find({
+			isHidden: false,
+			organizationId,
+		})
 
 		const busyEmployees = await Booking.find({
+			organizationId,
 			start_time: { $lt: new Date(end_time) },
 			end_time: { $gt: new Date(start_time) },
 		}).distinct("employee_id")
@@ -52,7 +70,10 @@ router.get("/available", async (req, res) => {
 // GET /api/employees/:id - Get single employee (even if hidden)
 router.get("/:id", async (req, res) => {
 	try {
-		const employee = await Employee.findById(req.params.id)
+		const employee = await Employee.findOne({
+			_id: req.params.id,
+			organizationId: req.organizationId,
+		})
 
 		if (!employee) {
 			return res.status(404).json({ error: "Служителот не е пронајден" })
@@ -69,14 +90,20 @@ router.get("/:id", async (req, res) => {
 router.post("/", async (req, res) => {
 	try {
 		const { name } = req.body
-
 		if (!name || name.trim() === "") {
 			return res
 				.status(400)
 				.json({ error: "Полето за име е задолжително" })
 		}
 
-		const employee = new Employee({ name: name.trim() })
+		const organizationId = req.organizationId // From auth middleware
+		if (!organizationId) {
+			return res.status(400).json({
+				error: "Идентификатор на организација е задолжителен",
+			})
+		}
+
+		const employee = new Employee({ name: name.trim(), organizationId })
 		await employee.save()
 
 		try {
@@ -108,10 +135,21 @@ router.put("/:id", async (req, res) => {
 		}
 
 		const prevEmployee = await Employee.findById(id)
+		if (!prevEmployee) {
+			return res.status(404).json({ error: "Служителот не е пронајден" })
+		}
+		if (
+			prevEmployee.organizationId.toString() !==
+			req.organizationId.toString()
+		) {
+			return res
+				.status(403)
+				.json({ error: "Немате пристап до овој служител" })
+		}
 
 		const employee = await Employee.findByIdAndUpdate(
 			id,
-			{ name: name.trim(), isHidden },
+			{ name: name.trim() },
 			{ new: true, runValidators: true }
 		)
 
@@ -139,6 +177,14 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
 	try {
 		const { id } = req.params
+		// Check if employee belongs to user's organization
+		const employee = await Employee.findOne({
+			_id: id,
+			organizationId: req.organizationId,
+		})
+		if (!employee) {
+			return res.status(404).json({ error: "Служителот не е пронајден" })
+		}
 
 		const futureBookings = await Booking.countDocuments({
 			employee_id: id,
@@ -151,15 +197,7 @@ router.delete("/:id", async (req, res) => {
 			})
 		}
 
-		const employee = await Employee.findByIdAndUpdate(
-			id,
-			{ isHidden: true },
-			{ new: true }
-		)
-
-		if (!employee) {
-			return res.status(404).json({ error: "Служителот не е пронајден" })
-		}
+		await Employee.findByIdAndUpdate(id, { isHidden: true }, { new: true })
 
 		try {
 			await logAction(req, {
@@ -182,8 +220,8 @@ router.patch("/:id/restore", async (req, res) => {
 	try {
 		const { id } = req.params
 
-		const employee = await Employee.findByIdAndUpdate(
-			id,
+		const employee = await Employee.findOneAndUpdate(
+			{ _id: id, organizationId: req.organizationId },
 			{ isHidden: false },
 			{ new: true }
 		)

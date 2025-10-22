@@ -14,6 +14,16 @@ const userSchema = new mongoose.Schema({
 		type: Date,
 		default: Date.now,
 	},
+	organizationId: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "Organization",
+		required: true,
+	},
+	role: {
+		type: String,
+		enum: ["admin", "user", "superadmin"],
+		default: "user",
+	},
 })
 
 module.exports = mongoose.model("User", userSchema)

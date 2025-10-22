@@ -2,6 +2,12 @@ const mongoose = require("mongoose")
 
 const historySchema = new mongoose.Schema(
 	{
+		organizationId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "Organization",
+			required: true,
+			index: true, // Important for query performance
+		},
 		action: {
 			type: String, // 'create' | 'update' | 'delete' | 'restore' | 'login' etc.
 			required: true,

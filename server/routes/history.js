@@ -10,6 +10,14 @@ router.get("/", async (req, res) => {
 		if (entityType) q.entityType = entityType
 		if (action) q.action = action
 
+		const organizationId = req.organizationId // From auth middleware
+		if (!organizationId) {
+			return res.status(400).json({
+				error: "Идентификатор на организација е задолжителен",
+			})
+		}
+		q.organizationId = organizationId
+
 		const pageNum = Math.max(parseInt(page) || 1, 1)
 		const pageSize = Math.min(Math.max(parseInt(limit) || 50, 1), 200)
 

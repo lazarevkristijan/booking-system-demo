@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react"
-import { Plus, Edit, Trash2, Search, Eye } from "lucide-react"
+import {
+	Plus,
+	Edit,
+	Trash2,
+	Search,
+	Eye,
+	ChevronLeft,
+	ChevronRight,
+} from "lucide-react"
 
 export const CrudTable = ({
 	title,
@@ -14,6 +22,7 @@ export const CrudTable = ({
 }) => {
 	const [searchTerm, setSearchTerm] = useState("")
 	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm)
+	const [currentPage, setCurrentPage] = useState(1)
 
 	useEffect(() => {
 		const handler = setTimeout(() => {
@@ -25,9 +34,14 @@ export const CrudTable = ({
 		}
 	}, [searchTerm])
 
-	const filteredData =
+	// Reset to page 1 when search term changes
+	useEffect(() => {
+		setCurrentPage(1)
+	}, [debouncedSearchTerm])
+
+	const searchFilteredData =
 		debouncedSearchTerm === ""
-			? data.slice(0, 30)
+			? data
 			: data.filter((item) =>
 					Object.values(item).some((value) =>
 						value
@@ -36,6 +50,13 @@ export const CrudTable = ({
 							.includes(debouncedSearchTerm.toLowerCase())
 					)
 			  )
+
+	// Calculate pagination
+	const itemsPerPage = 10
+	const totalPages = Math.ceil(searchFilteredData.length / itemsPerPage)
+	const startIndex = (currentPage - 1) * itemsPerPage
+	const endIndex = startIndex + itemsPerPage
+	const paginatedData = searchFilteredData.slice(startIndex, endIndex)
 
 	const formatValue = (value, type) => {
 		if (value === null || value === undefined) return "-"
@@ -90,7 +111,7 @@ export const CrudTable = ({
 
 			{/* Table */}
 			<div className="overflow-x-auto">
-				{filteredData.length === 0 ? (
+				{paginatedData.length === 0 ? (
 					<div className="px-4 sm:px-6 py-12 text-center">
 						<div className="text-slate-400 text-sm">
 							{searchTerm
@@ -125,7 +146,7 @@ export const CrudTable = ({
 							</tr>
 						</thead>
 						<tbody className="bg-white divide-y divide-slate-200">
-							{filteredData.map((item, index) => (
+							{paginatedData.map((item, index) => (
 								<tr
 									key={item._id || index}
 									className="hover:bg-slate-50 active:bg-slate-100"
@@ -185,6 +206,58 @@ export const CrudTable = ({
 					</table>
 				)}
 			</div>
+			{/* Pagination Controls - ADD THIS */}
+			{searchFilteredData.length > 0 && (
+				<div className="px-4 sm:px-6 py-4 border-t border-slate-200">
+					<div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+						<div className="text-sm text-slate-700">
+							Прикажани{" "}
+							<span className="font-medium">
+								{startIndex + 1}
+							</span>{" "}
+							до{" "}
+							<span className="font-medium">
+								{Math.min(endIndex, searchFilteredData.length)}
+							</span>{" "}
+							од{" "}
+							<span className="font-medium">
+								{searchFilteredData.length}
+							</span>{" "}
+							резултати
+						</div>
+
+						<div className="flex items-center gap-2">
+							<button
+								onClick={() =>
+									setCurrentPage((p) => Math.max(1, p - 1))
+								}
+								disabled={currentPage === 1}
+								className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+								aria-label="Претходна страна"
+							>
+								<ChevronLeft className="h-5 w-5" />
+							</button>
+
+							<span className="text-sm text-slate-700 px-3">
+								Страна {currentPage} од {totalPages}
+							</span>
+
+							<button
+								onClick={() =>
+									setCurrentPage((p) =>
+										Math.min(totalPages, p + 1)
+									)
+								}
+								disabled={currentPage === totalPages}
+								className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+								aria-label="Следна страна"
+							>
+								<ChevronRight className="h-5 w-5" />
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	)
 }
