@@ -159,6 +159,30 @@ router.post("/", async (req, res) => {
 				.json({ error: "Служителот не е слободен во ова време" })
 		}
 
+		// Check for overlapping bookings - CLIENT
+		const overlappingClientBooking = await Booking.findOne({
+			organizationId,
+			client_id,
+			$or: [
+				{
+					start_time: { $lt: new Date(end_time) },
+					end_time: { $gt: new Date(start_time) },
+				},
+				{
+					start_time: {
+						$gte: new Date(start_time),
+						$lt: new Date(end_time),
+					},
+				},
+			],
+		})
+
+		if (overlappingClientBooking) {
+			return res
+				.status(400)
+				.json({ error: "Клиентот веќе има резервација во ова време" })
+		}
+
 		// Create booking
 		const booking = new Booking({
 			organizationId,
