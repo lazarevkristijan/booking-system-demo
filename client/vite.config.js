@@ -1,11 +1,12 @@
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
-import { reactComponentTagger } from "react-component-tagger"
 
 export default defineConfig({
-	base: "./",
-	plugins: [react(), reactComponentTagger()],
+	plugins: [react()],
 	build: {
 		chunkSizeWarningLimit: 10240,
+	},
+	server: {
+		historyApiFallback: true,
 	},
 })

@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react"
-import { HashRouter, Routes, Route, Navigate } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { Layout } from "./components/Layout"
 import { DashboardPage } from "./pages/DashboardPage"
 import { LoginPage } from "./pages/LoginPage"
@@ -159,7 +159,7 @@ export const App = () => {
 	}
 
 	return (
-		<HashRouter>
+		<BrowserRouter>
 			<Routes>
 				<Route
 					path="/login"
@@ -358,6 +358,6 @@ export const App = () => {
 					}
 				/>
 			</Routes>
-		</HashRouter>
+		</BrowserRouter>
 	)
 }
