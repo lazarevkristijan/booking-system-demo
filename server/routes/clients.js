@@ -12,9 +12,11 @@ router.get("/", async (req, res) => {
 
 		// Search by name or phone
 		if (q) {
+			const escapedQuery = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
 			query.$or = [
-				{ full_name: { $regex: q, $options: "i" } },
-				{ phone: { $regex: q, $options: "i" } },
+				{ full_name: { $regex: escapedQuery, $options: "i" } },
+				{ phone: { $regex: escapedQuery, $options: "i" } },
 			]
 		}
 
@@ -183,7 +185,10 @@ router.post("/", async (req, res) => {
 				.status(400)
 				.json({ error: req.t("validation.nameRequired") })
 		}
-		if (!phone || phone.trim() === "" || isNaN(phone)) {
+
+		const cleanedPhone = phone?.trim().replace(/\s/g, "") || ""
+
+		if (!cleanedPhone || cleanedPhone === "" || isNaN(cleanedPhone)) {
 			return res.status(400).json({
 				error: req.t("validation.phoneRequired"),
 			})
@@ -195,7 +200,7 @@ router.post("/", async (req, res) => {
 				error: req.t("validation.organizationRequired"),
 			})
 		}
-		if (await Client.findOne({ phone: phone, organizationId })) {
+		if (await Client.findOne({ phone: cleanedPhone, organizationId })) {
 			return res.status(400).json({
 				error: req.t("errors.clientPhoneExists"),
 			})
@@ -203,7 +208,7 @@ router.post("/", async (req, res) => {
 
 		const client = new Client({
 			full_name: full_name.trim(),
-			phone: phone.trim(),
+			phone: cleanedPhone,
 			notes: notes || "",
 			organizationId,
 		})
@@ -239,7 +244,10 @@ router.put("/:id", async (req, res) => {
 				error: req.t("validation.clientFieldsRequired"),
 			})
 		}
-		if (!phone || phone.trim() === "" || isNaN(phone)) {
+
+		const cleanedPhone = phone?.trim().replace(/\s/g, "") || ""
+
+		if (!cleanedPhone || cleanedPhone === "" || isNaN(cleanedPhone)) {
 			return res.status(400).json({
 				error: req.t("validation.phoneRequired"),
 			})
@@ -261,10 +269,10 @@ router.put("/:id", async (req, res) => {
 				.json({ error: req.t("errors.noAccessToClient") })
 		}
 
-		if (clientFromId.phone !== phone) {
+		if (clientFromId.phone !== cleanedPhone) {
 			if (
 				await Client.findOne({
-					phone: phone,
+					phone: cleanedPhone,
 					organizationId: req.organizationId,
 				})
 			) {
@@ -280,7 +288,7 @@ router.put("/:id", async (req, res) => {
 			id,
 			{
 				full_name: full_name.trim(),
-				phone: phone.trim(),
+				phone: cleanedPhone,
 				notes: notes || "",
 			},
 			{ new: true, runValidators: true }
