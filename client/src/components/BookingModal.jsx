@@ -21,6 +21,8 @@ import {
 } from "../constants"
 import { createErrorModal } from "../constants"
 import { useTranslation } from "react-i18next"
+import { useOrganization } from "../contexts/OrganizationContext"
+import { convertOrgTimezoneToUTC } from "../utils/timezone"
 
 export const BookingModal = ({
 	isOpen,
@@ -33,6 +35,9 @@ export const BookingModal = ({
 	onBookingUpdated,
 }) => {
 	const { t } = useTranslation()
+	const { organization } = useOrganization()
+	const timezone = organization?.timezone || "UTC"
+
 	// Step state
 	const [currentStep, setCurrentStep] = useState(selectedEmployeeId ? 2 : 1)
 
@@ -430,10 +435,14 @@ export const BookingModal = ({
 			alignedStartTime.getTime() + totals.totalDuration * 60000
 		)
 
+		// Convert times from organization timezone to UTC before sending to backend
+		const startTimeUTC = convertOrgTimezoneToUTC(alignedStartTime, timezone)
+		const endTimeUTC = convertOrgTimezoneToUTC(endTime, timezone)
+
 		const bookingPayload = {
 			// shape these to match your backend contract
-			start_time: alignedStartTime.toISOString(),
-			end_time: endTime.toISOString(),
+			start_time: startTimeUTC,
+			end_time: endTimeUTC,
 			employee_id: selectedData.employee._id,
 			client_id: clientId,
 			service_ids: selectedData.services.map((s) => s._id),

@@ -5,6 +5,7 @@ import {
 	Calendar,
 	History,
 	Scissors,
+	Settings,
 	Shield,
 	UserCheck,
 	Users,
@@ -176,6 +177,11 @@ export const adminNavItems = [
 		name: "Историја",
 		path: "/history",
 		icon: History,
+	},
+	{
+		name: "Подесувања",
+		path: "/settings",
+		icon: Settings,
 	},
 ]
 // SUPERADMIN NAV ITEMS

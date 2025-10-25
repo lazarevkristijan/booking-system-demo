@@ -334,7 +334,9 @@
 		"serverError": "Server error",
 		"errorTitle": "Error",
 		"someProblemOccurred": "Some problem occurred.",
-		"close": "Close"
+		"close": "Close",
+		"adminOnly": "This action requires administrator privileges",
+		"cannotModifyOtherOrganization": "You cannot modify other organizations"
 	},
 
 	"settings": {
@@ -342,7 +344,15 @@
 		"changeLanguage": "Change Language",
 		"english": "English",
 		"macedonian": "Macedonian",
-		"bulgarian": "Bulgarian"
+		"bulgarian": "Bulgarian",
+		"organizationSettings": "Organization Settings",
+		"timezone": "Timezone",
+		"timezoneDescription": "Set the timezone for your organization. All dates and times will be displayed and stored in this timezone.",
+		"selectTimezone": "Select Timezone",
+		"currentTimezone": "Current Timezone",
+		"timezoneNote": "Changing the timezone will affect how all dates and times are displayed throughout the application.",
+		"saveSuccess": "Settings saved successfully!",
+		"saveError": "Failed to save settings. Please try again."
 	},
 
 	"errorBoundary": {

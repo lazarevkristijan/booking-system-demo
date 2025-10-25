@@ -8,6 +8,7 @@ axios.defaults.withCredentials = true
 import { getCurrentUser, getSession } from "./constants"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
+import { OrganizationProvider } from "./contexts/OrganizationContext"
 
 // Lazy load admin pages for better performance
 const EmployeesPage = lazy(() =>
@@ -33,6 +34,11 @@ const SuperAdminOrganizationsPage = lazy(() =>
 const SuperAdminUsersPage = lazy(() =>
 	import("./pages/SuperAdminUsersPage").then((m) => ({
 		default: m.SuperAdminUsersPage,
+	}))
+)
+const OrganizationSettingsPage = lazy(() =>
+	import("./pages/OrganizationSettingsPage").then((m) => ({
+		default: m.OrganizationSettingsPage,
 	}))
 )
 
@@ -208,7 +214,9 @@ export const App = () => {
 									onLogout={() => setIsAuthenticated(false)}
 									userRole={userRole}
 								>
-									<DashboardPage />
+									<OrganizationProvider>
+										<DashboardPage />
+									</OrganizationProvider>
 								</Layout>
 							)}
 						</ProtectedRoute>
@@ -318,6 +326,27 @@ export const App = () => {
 								<Suspense fallback={<LoadingFallback />}>
 									<HistoryPage />
 								</Suspense>
+							</Layout>
+						</AdminRoute>
+					}
+				/>
+
+				<Route
+					path="/settings"
+					element={
+						<AdminRoute
+							isAuthenticated={isAuthenticated}
+							userRole={userRole}
+						>
+							<Layout
+								onLogout={() => setIsAuthenticated(false)}
+								userRole={userRole}
+							>
+								<OrganizationProvider>
+									<Suspense fallback={<LoadingFallback />}>
+										<OrganizationSettingsPage />
+									</Suspense>
+								</OrganizationProvider>
 							</Layout>
 						</AdminRoute>
 					}
