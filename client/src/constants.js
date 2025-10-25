@@ -449,6 +449,16 @@ export const createBookingApi = async (booking) => {
 		.catch((e) => createErrorModal(e))
 }
 
+export const updateBookingApi = async (bookingId, booking) => {
+	return await axios
+		.put(`${SERVER_API}/bookings/${bookingId}`, booking)
+		.then((res) => res.data)
+		.catch((e) => {
+			console.log("err")
+			throw e // Throw to let mutation handle it
+		})
+}
+
 export const deleteBookingFromModal = async (booking, onDeleted, onClose) => {
 	return await axios
 		.delete(`${SERVER_API}/bookings/${booking._id}`)

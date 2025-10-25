@@ -17,6 +17,7 @@ import {
 	getEmployees,
 	getServices,
 	searchClientsApi,
+	SERVER_API,
 } from "../constants"
 import { createErrorModal } from "../constants"
 import { useTranslation } from "react-i18next"
@@ -28,6 +29,8 @@ export const BookingModal = ({
 	selectedDateTime,
 	existingBookings = [],
 	selectedEmployeeId,
+	editingBooking = null, // NEW
+	onBookingUpdated,
 }) => {
 	const { t } = useTranslation()
 	// Step state
@@ -58,6 +61,8 @@ export const BookingModal = ({
 		overrideTotal: false,
 		totalPrice: 0,
 	})
+	const isEditMode = !!editingBooking
+	const [editableDateTime, setEditableDateTime] = useState(null)
 
 	// Query client
 	const queryClient = useQueryClient()
@@ -95,10 +100,53 @@ export const BookingModal = ({
 			createErrorModal(err)
 		},
 	})
+	const updateMutation = useMutation({
+		mutationFn: ({ bookingId, payload }) =>
+			axios
+				.put(`${SERVER_API}/bookings/${bookingId}`, payload)
+				.then((res) => res.data),
+		onSuccess: (data) => {
+			queryClient.invalidateQueries(["bookings"])
+			if (typeof onBookingUpdated === "function") onBookingUpdated(data)
+			if (typeof onClose === "function") onClose(data)
+		},
+		onError: (err) => {
+			createErrorModal(err)
+		},
+	})
 
-	// Set pre-selected employee when modal opens and data is available
 	useEffect(() => {
-		if (isOpen && selectedEmployeeId && employeesData) {
+		if (isOpen && editingBooking && employeesData && servicesData) {
+			// Populate form with existing booking data
+			const employee = employeesData.find(
+				(emp) => emp._id === editingBooking.employee?._id
+			)
+			const services = servicesData.filter((srv) =>
+				editingBooking.services?.some((s) => s._id === srv._id)
+			)
+
+			setSelectedData({
+				employee: employee || null,
+				services: services || [],
+				client: {
+					_id: editingBooking.client?._id,
+					full_name: editingBooking.client?.name,
+					phone: editingBooking.client?.phone,
+					notes: editingBooking.client?.notes,
+				},
+				newClient: { name: "", phone: "" },
+				notes: editingBooking.notes || "",
+			})
+
+			setManualPricing({
+				overrideTotal: false,
+				totalPrice: editingBooking.price || 0,
+			})
+
+			setEditableDateTime(new Date(editingBooking.startTime))
+
+			setCurrentStep(1)
+		} else if (isOpen && selectedEmployeeId && employeesData) {
 			const preSelectedEmployee = employeesData.find(
 				(emp) => emp._id === selectedEmployeeId
 			)
@@ -107,10 +155,16 @@ export const BookingModal = ({
 					...prev,
 					employee: preSelectedEmployee,
 				}))
-				setCurrentStep(2) // Skip to services step
+				setCurrentStep(2)
 			}
 		}
-	}, [isOpen, selectedEmployeeId, employeesData])
+	}, [
+		isOpen,
+		editingBooking,
+		selectedEmployeeId,
+		employeesData,
+		servicesData,
+	])
 
 	// Keep local employees in sync with fetched employees
 	useEffect(() => {
@@ -134,6 +188,16 @@ export const BookingModal = ({
 		aligned.setMinutes(alignedMinutes, 0, 0)
 		return aligned
 	}
+	const formatDateTimeLocal = (date) => {
+		if (!date) return ""
+		const d = new Date(date)
+		const year = d.getFullYear()
+		const month = String(d.getMonth() + 1).padStart(2, "0")
+		const day = String(d.getDate()).padStart(2, "0")
+		const hours = String(d.getHours()).padStart(2, "0")
+		const minutes = String(d.getMinutes()).padStart(2, "0")
+		return `${year}-${month}-${day}T${hours}:${minutes}`
+	}
 
 	// Compute total duration & price from selected services (memoized)
 	const totals = useMemo(() => {
@@ -150,20 +214,29 @@ export const BookingModal = ({
 
 	// Update availability for localEmployees - modified to handle pre-selected employee
 	useEffect(() => {
-		if (!selectedDateTime || !employeesData || employeesData.length === 0)
-			return
+		// Use editableDateTime instead of selectedDateTime
+		const dateToCheck = isEditMode ? editableDateTime : selectedDateTime
+
+		if (!dateToCheck || !employeesData || employeesData.length === 0) return
 
 		const bookingDuration =
 			totals.totalDuration > 0 ? totals.totalDuration : 30
-		const startTime = alignToThirtyMinutes(selectedDateTime)
+		const startTime = alignToThirtyMinutes(dateToCheck)
 		const endTime = new Date(startTime.getTime() + bookingDuration * 60000)
 
 		const updated = employeesData.map((emp) => {
-			// If this is the pre-selected employee, check availability
-			// Otherwise, mark as available for selection
 			const overlapping = existingBookings.some((booking) => {
 				if (!booking.employee || !booking.employee._id) return false
 				if (booking.employee._id !== emp._id) return false
+
+				// NEW: Exclude current booking when in edit mode
+				if (
+					isEditMode &&
+					editingBooking &&
+					booking._id === editingBooking._id
+				) {
+					return false
+				}
 
 				const bookingStart = new Date(booking.startTime)
 				const bookingEnd = new Date(booking.endTime)
@@ -186,10 +259,13 @@ export const BookingModal = ({
 
 		setLocalEmployees(updated)
 	}, [
+		editableDateTime,
 		selectedDateTime,
 		totals.totalDuration,
 		existingBookings,
 		employeesData,
+		isEditMode,
+		editingBooking,
 	])
 
 	// Reset function when modal closes
@@ -210,6 +286,7 @@ export const BookingModal = ({
 			setClientSearch("")
 			setDebouncedClientSearch("")
 			setShowSuggestions(false)
+			setEditableDateTime(null)
 		}
 	}, [isOpen])
 
@@ -328,6 +405,16 @@ export const BookingModal = ({
 			return
 		}
 
+		const dateTimeToUse = isEditMode ? editableDateTime : selectedDateTime
+
+		if (!dateTimeToUse) {
+			createErrorModal({
+				data: {
+					error: t("bookings.errorNoDateTime"),
+				},
+			})
+			return
+		}
 		let clientId = selectedData.client?._id || null
 		if (
 			!clientId &&
@@ -338,7 +425,7 @@ export const BookingModal = ({
 			clientId = res._id
 		}
 
-		const alignedStartTime = alignToThirtyMinutes(selectedDateTime)
+		const alignedStartTime = alignToThirtyMinutes(dateTimeToUse)
 		const endTime = new Date(
 			alignedStartTime.getTime() + totals.totalDuration * 60000
 		)
@@ -357,8 +444,14 @@ export const BookingModal = ({
 			notes: selectedData.notes,
 		}
 
-		bookingMutation.mutate(bookingPayload)
-		// Reset form only after success (handled in onSuccess)
+		if (isEditMode) {
+			updateMutation.mutate({
+				bookingId: editingBooking._id,
+				payload: bookingPayload,
+			})
+		} else {
+			bookingMutation.mutate(bookingPayload)
+		} // Reset form only after success (handled in onSuccess)
 	}
 
 	// If modal is closed, reset internal state
@@ -375,6 +468,7 @@ export const BookingModal = ({
 			setClientSearch("")
 			setDebouncedClientSearch("")
 			setShowSuggestions(false)
+			setEditableDateTime(null)
 		}
 	}, [isOpen])
 
@@ -402,13 +496,21 @@ export const BookingModal = ({
 					<div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-200">
 						<div className="min-w-0 flex-1 mr-4">
 							<h3 className="text-base sm:text-lg font-semibold text-slate-800 font-poppins truncate">
-								{t("bookings.newBooking")}
+								{isEditMode
+									? t("bookings.editBooking")
+									: t("bookings.newBooking")}
 							</h3>
 							<p className="text-xs sm:text-sm text-slate-600 mt-1 truncate">
-								{selectedDateTime
+								{(
+									isEditMode
+										? editableDateTime
+										: selectedDateTime
+								)
 									? alignToThirtyMinutes(
-											selectedDateTime
-									  ).toLocaleString(t('common.locale'))
+											isEditMode
+												? editableDateTime
+												: selectedDateTime
+									  ).toLocaleString(t("common.locale"))
 									: ""}
 							</p>
 						</div>
@@ -485,6 +587,36 @@ export const BookingModal = ({
 						{/* Step 1: Employee Selection */}
 						{currentStep === 1 && (
 							<div>
+								{/* NEW: Date/Time Picker for Edit Mode */}
+								{isEditMode && (
+									<div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+										<label className="block text-sm font-medium text-slate-700 mb-2">
+											{t("bookings.selectNewDateTime")}
+										</label>
+										<input
+											type="datetime-local"
+											value={formatDateTimeLocal(
+												editableDateTime
+											)}
+											onChange={(e) => {
+												const newDate = new Date(
+													e.target.value
+												)
+												setEditableDateTime(newDate)
+											}}
+											className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+										/>
+										<p className="text-xs text-slate-600 mt-2">
+											{t("bookings.originalTime")}:{" "}
+											{new Date(
+												editingBooking.startTime
+											).toLocaleString(
+												t("common.locale")
+											)}
+										</p>
+									</div>
+								)}
+
 								<h4 className="text-base sm:text-lg font-medium text-slate-800 mb-4">
 									{t("bookings.selectAvailableEmployee")}
 								</h4>
@@ -1039,12 +1171,14 @@ export const BookingModal = ({
 									onClick={handleSubmit}
 									disabled={
 										!canProceed() ||
-										bookingMutation.isLoading
+										bookingMutation.isLoading ||
+										updateMutation.isLoading
 									}
 									className="inline-flex items-center px-6 py-3 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-h-[44px]"
 								>
-									{bookingMutation.isLoading
-										? t("common.creating")
+									{bookingMutation.isLoading ||
+									updateMutation.isLoading
+										? t("bookings.updateBooking")
 										: t("bookings.createBooking")}
 									<Check className="h-4 w-4 ml-1" />
 								</button>

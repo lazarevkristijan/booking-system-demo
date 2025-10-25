@@ -35,6 +35,7 @@
 		"minutes": "минути",
 		"additional": "Дополнително",
 		"creating": "Креирање...",
+		"saving": "Зачувување...",
 		"enterPrice": "Внесете цена...",
 		"locale": "mk-MK",
 		"enterName": "Внесете име...",
@@ -199,6 +200,8 @@
 		"title": "Резервации",
 		"newBooking": "Нова Резервација",
 		"editBooking": "Уреди Резервација",
+		"updateBooking": "Ажурирај Резервација",
+		"moveBooking": "Премести Резервација",
 		"deleteBooking": "Избриши Резервација",
 		"client": "Клиент",
 		"employee": "Вработен",
@@ -243,7 +246,9 @@
 		"bookingNote": "Белешка за резервацијата",
 		"clientNote": "Белешка за клиентот",
 		"recentBookings": "Последни резервации",
-		"noPreviousBookings": "Нема претходни резервации"
+		"noPreviousBookings": "Нема претходни резервации",
+		"selectNewDateTime": "Изберете нов датум и време",
+		"originalTime": "Оригинално време"
 	},
 
 	"users": {

@@ -247,6 +247,164 @@ router.post("/", async (req, res) => {
 	}
 })
 
+// PUT /api/bookings/:id - Update/Move existing booking
+router.put("/:id", async (req, res) => {
+	try {
+		const { id } = req.params
+		const organizationId = req.organizationId // From auth middleware
+
+		const {
+			employee_id,
+			client_id,
+			start_time,
+			end_time,
+			service_ids,
+			total_price,
+			notes,
+		} = req.body
+
+		// Validation
+		if (
+			!employee_id ||
+			!client_id ||
+			!start_time ||
+			!end_time ||
+			!service_ids ||
+			!Array.isArray(service_ids) ||
+			service_ids.length === 0
+		) {
+			return res.status(400).json({
+				error: req.t("validation.bookingFieldsRequired"),
+			})
+		}
+
+		// Check if booking exists
+		const existingBooking = await Booking.findOne({
+			_id: id,
+			organizationId,
+		})
+			.populate("employee_id", "name")
+			.populate("client_id", "full_name phone")
+			.populate("services", "name duration price")
+
+		if (!existingBooking) {
+			return res
+				.status(404)
+				.json({ error: req.t("errors.bookingNotFound") })
+		}
+
+		// Check for overlapping bookings with EMPLOYEE (excluding current booking)
+		const overlappingEmployeeBooking = await Booking.findOne({
+			organizationId,
+			employee_id,
+			_id: { $ne: id }, // Exclude current booking
+			$or: [
+				{
+					start_time: { $lt: new Date(end_time) },
+					end_time: { $gt: new Date(start_time) },
+				},
+				{
+					start_time: {
+						$gte: new Date(start_time),
+						$lt: new Date(end_time),
+					},
+				},
+			],
+		})
+
+		if (overlappingEmployeeBooking) {
+			return res
+				.status(400)
+				.json({ error: req.t("errors.employeeNotAvailable") })
+		}
+
+		// Check for overlapping bookings with CLIENT (excluding current booking)
+		const overlappingClientBooking = await Booking.findOne({
+			organizationId,
+			client_id,
+			_id: { $ne: id }, // Exclude current booking
+			$or: [
+				{
+					start_time: { $lt: new Date(end_time) },
+					end_time: { $gt: new Date(start_time) },
+				},
+				{
+					start_time: {
+						$gte: new Date(start_time),
+						$lt: new Date(end_time),
+					},
+				},
+			],
+		})
+
+		if (overlappingClientBooking) {
+			return res
+				.status(400)
+				.json({ error: req.t("errors.clientHasBooking") })
+		}
+
+		// Update booking
+		existingBooking.employee_id = employee_id
+		existingBooking.client_id = client_id
+		existingBooking.start_time = new Date(start_time)
+		existingBooking.end_time = new Date(end_time)
+		existingBooking.services = service_ids
+		existingBooking.price = total_price
+		existingBooking.notes = notes || ""
+
+		await existingBooking.save()
+
+		// Populate the updated booking with related data
+		await existingBooking.populate("employee_id", "name")
+		await existingBooking.populate("client_id", "full_name phone")
+		await existingBooking.populate("services", "name duration price")
+
+		const formattedBooking = {
+			id: existingBooking._id,
+			startTime: existingBooking.start_time,
+			endTime: existingBooking.end_time,
+			price: existingBooking.price,
+			notes: existingBooking.notes,
+			employee: {
+				id: existingBooking.employee_id._id,
+				name: existingBooking.employee_id.name,
+			},
+			client: {
+				id: existingBooking.client_id._id,
+				name: existingBooking.client_id.full_name,
+				phone: existingBooking.client_id.phone,
+			},
+			services: existingBooking.services,
+			created_at: existingBooking.createdAt,
+			updated_at: existingBooking.updatedAt,
+		}
+
+		try {
+			await logAction(req, {
+				action: req.t("actions.update"),
+				entityType: req.t("entities.booking"),
+				entityId: existingBooking._id,
+				details: `${req.t("entities.client")}: ${
+					formattedBooking.client.name
+				}, ${req.t("entities.phone")}: ${
+					formattedBooking.client.phone
+				}, ${req.t("entities.employee")}: ${
+					formattedBooking.employee.name
+				}, ${req.t(
+					"entities.appointment"
+				)}: ${formattedBooking.startTime.toLocaleString(
+					req.t("common.locale")
+				)}`,
+			})
+		} catch {}
+
+		res.json(formattedBooking)
+	} catch (error) {
+		console.error("Error updating booking:", error)
+		res.status(500).json({ error: req.t("errors.serverError") })
+	}
+})
+
 // DELETE /api/bookings/:id - Delete booking
 router.delete("/:id", async (req, res) => {
 	try {

@@ -24,6 +24,8 @@ export const DashboardPage = () => {
 	const [selectedBooking, setSelectedBooking] = useState(null)
 	const [showBookingDetailsModal, setShowBookingDetailsModal] =
 		useState(false)
+	const [editingBooking, setEditingBooking] = useState(null)
+	const [showEditBookingModal, setShowEditBookingModal] = useState(false)
 
 	const [viewMode, setViewMode] = useState("month")
 	const [selectedEmployeeId, setSelectedEmployeeId] = useState(null)
@@ -116,12 +118,33 @@ export const DashboardPage = () => {
 		}
 		setShowBookingModal(false)
 	}, [])
+	const handleBookingUpdated = useCallback((updatedBooking) => {
+		if (
+			updatedBooking &&
+			typeof updatedBooking === "object" &&
+			typeof updatedBooking.price === "number"
+		) {
+			setBookings((prevBookings) =>
+				prevBookings.map((b) =>
+					b._id === updatedBooking.id ? updatedBooking : b
+				)
+			)
+		}
+		setShowEditBookingModal(false)
+		setShowBookingDetailsModal(false)
+		setEditingBooking(null)
+	}, [])
 	const handleBookingDeleted = useCallback((bookingId) => {
 		setBookings((prevBookings) =>
 			prevBookings.filter((b) => b._id !== bookingId)
 		)
 		setShowBookingDetailsModal(false)
 		setSelectedBooking(null)
+	}, [])
+	const handleMoveBookingClicked = useCallback((booking) => {
+		setEditingBooking(booking)
+		setShowBookingDetailsModal(false)
+		setShowEditBookingModal(true)
 	}, [])
 
 	const timeSlots = Array.from({ length: 25 }, (_, i) => {
@@ -1117,11 +1140,26 @@ export const DashboardPage = () => {
 				existingBookings={bookings}
 				selectedEmployeeId={selectedEmployeeId}
 			/>
+			<BookingModal
+				isOpen={showEditBookingModal}
+				onClose={() => {
+					setShowEditBookingModal(false)
+					setEditingBooking(null)
+				}}
+				selectedDateTime={
+					editingBooking ? new Date(editingBooking.startTime) : null
+				}
+				existingBookings={bookings}
+				selectedEmployeeId={editingBooking?.employee?._id}
+				editingBooking={editingBooking}
+				onBookingUpdated={handleBookingUpdated}
+			/>
 			<BookingDetailsModal
 				isOpen={showBookingDetailsModal}
 				onClose={() => setShowBookingDetailsModal(false)}
 				booking={selectedBooking}
 				onDeleted={handleBookingDeleted}
+				onMoveClicked={handleMoveBookingClicked}
 			/>
 		</div>
 	)

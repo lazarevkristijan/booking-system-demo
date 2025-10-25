@@ -35,6 +35,7 @@
 		"minutes": "minutes",
 		"additional": "Additional",
 		"creating": "Creating...",
+		"saving": "Saving...",
 		"enterPrice": "Enter price...",
 		"locale": "en-US",
 		"enterName": "Enter name...",
@@ -199,6 +200,8 @@
 		"title": "Bookings",
 		"newBooking": "New Booking",
 		"editBooking": "Edit Booking",
+		"updateBooking": "Update Booking",
+		"moveBooking": "Move Booking",
 		"deleteBooking": "Delete Booking",
 		"client": "Client",
 		"employee": "Employee",
@@ -243,7 +246,9 @@
 		"bookingNote": "Booking note",
 		"clientNote": "Client note",
 		"recentBookings": "Recent Bookings",
-		"noPreviousBookings": "No previous bookings"
+		"noPreviousBookings": "No previous bookings",
+		"selectNewDateTime": "Select new date & time",
+		"originalTime": "Original time"
 	},
 
 	"users": {

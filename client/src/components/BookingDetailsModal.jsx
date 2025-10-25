@@ -1,6 +1,6 @@
 import axios from "axios"
 axios.defaults.withCredentials = true
-import { Phone, StickyNote, Trash, User, X } from "lucide-react"
+import { Phone, StickyNote, Trash, User, X, Calendar } from "lucide-react"
 import { useState } from "react"
 import ConfirmModal from "./ConfirmModal"
 import {
@@ -16,6 +16,7 @@ export const BookingDetailsModal = ({
 	onClose,
 	booking,
 	onDeleted,
+	onMoveClicked,
 }) => {
 	const { t } = useTranslation()
 	const [showConfirm, setShowConfirm] = useState(false)
@@ -219,6 +220,16 @@ export const BookingDetailsModal = ({
 							className="flex items-center gap-2 px-4 py-3 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 touch-manipulation min-h-[44px]"
 						>
 							<Phone className="w-4 h-4" />
+						</button>
+						<button
+							onClick={() => {
+								if (typeof onMoveClicked === "function") {
+									onMoveClicked(booking)
+								}
+							}}
+							className="flex items-center gap-2 px-4 py-3 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 touch-manipulation min-h-[44px]"
+						>
+							<Calendar className="w-4 h-4" />
 						</button>
 						<button
 							onClick={onClose}
