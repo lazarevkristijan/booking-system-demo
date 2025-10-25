@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
-import { Menu, X, LogOut, User } from "lucide-react"
+import { Menu, X, LogOut, User, Building2 } from "lucide-react"
 import axios from "axios"
 axios.defaults.withCredentials = true
 import {
@@ -78,7 +78,7 @@ export const Layout = ({ children, onLogout, userRole }) => {
 					className="flex items-center gap-2 font-bold text-slate-800 text-lg font-poppins"
 				>
 					<span className="flex w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 items-center justify-center text-white font-bold text-sm">
-						MC
+						<Building2 className="h-5 w-5" />
 					</span>
 					{isSuperAdmin ? "SuperAdmin" : organizationName}
 				</Link>
@@ -101,7 +101,7 @@ export const Layout = ({ children, onLogout, userRole }) => {
 								onClick={() => setIsMenuOpen(false)}
 							>
 								<span className="flex w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 items-center justify-center text-white font-bold text-sm">
-									MC
+									<Building2 className="h-5 w-5" />
 								</span>
 								{isSuperAdmin ? "SuperAdmin" : organizationName}
 							</Link>
@@ -226,7 +226,7 @@ export const Layout = ({ children, onLogout, userRole }) => {
 				<aside className="w-64 bg-white border-r border-slate-200 flex flex-col">
 					<div className="flex items-center gap-2 px-6 py-6">
 						<span className="flex w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 items-center justify-center text-white font-bold text-xl">
-							MС
+							<Building2 className="h-5 w-5" />
 						</span>
 						<span className="font-bold text-slate-800 text-xl font-poppins">
 							{organizationName}
@@ -256,7 +256,7 @@ export const Layout = ({ children, onLogout, userRole }) => {
 								<div className="px-4 py-2">
 									<div className="border-t border-slate-200"></div>
 									<p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-2">
-										Администрација
+										{t("navigation.administration")}
 									</p>
 								</div>
 								{translatedAdminNavItems.map((item) => (
@@ -281,7 +281,7 @@ export const Layout = ({ children, onLogout, userRole }) => {
 							<>
 								<div className="px-4 py-2">
 									<p className="text-xs font-semibold text-purple-500 uppercase tracking-wider">
-										Супер Администратор
+										{t("navigation.superAdmin")}
 									</p>
 								</div>
 								{translatedSuperadminNavItems.map((item) => (
