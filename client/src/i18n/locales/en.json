@@ -338,5 +338,12 @@
 		"english": "English",
 		"macedonian": "Macedonian",
 		"bulgarian": "Bulgarian"
+	},
+
+	"errorBoundary": {
+		"title": "Something went wrong",
+		"message": "An unexpected error occurred. Please try again.",
+		"details": "Error details",
+		"reload": "Reload page"
 	}
 }

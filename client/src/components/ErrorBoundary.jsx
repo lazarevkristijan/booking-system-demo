@@ -1,7 +1,8 @@
 import { Component } from "react"
 import { AlertTriangle } from "lucide-react"
+import { withTranslation } from "react-i18next"
 
-export class ErrorBoundary extends Component {
+class ErrorBoundaryComponent extends Component {
 	constructor(props) {
 		super(props)
 		this.state = { hasError: false, error: null, errorInfo: null }
@@ -20,6 +21,8 @@ export class ErrorBoundary extends Component {
 	}
 
 	render() {
+		const { t } = this.props
+
 		if (this.state.hasError) {
 			return (
 				<div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
@@ -30,29 +33,27 @@ export class ErrorBoundary extends Component {
 							</div>
 						</div>
 						<h1 className="text-2xl font-bold text-slate-800 mb-2">
-							Нешто тргна наопаку
+							{t("errorBoundary.title")}
 						</h1>
 						<p className="text-slate-600 mb-6">
-							Се случи неочекувана грешка. Ве молиме обидете се
-							повторно.
+							{t("errorBoundary.message")}
 						</p>
-						{import.meta.env.VITE_NODE_ENV === "development" &&
-							this.state.error && (
-								<details className="text-left mb-4 p-4 bg-slate-50 rounded text-sm">
-									<summary className="cursor-pointer font-medium text-slate-700 mb-2">
-										Детали за грешката
-									</summary>
-									<pre className="text-xs text-red-600 overflow-auto">
-										{this.state.error.toString()}
-										{this.state.errorInfo?.componentStack}
-									</pre>
-								</details>
-							)}
+						{this.state.error && (
+							<details className="text-left mb-4 p-4 bg-slate-50 rounded text-sm">
+								<summary className="cursor-pointer font-medium text-slate-700 mb-2">
+									{t("errorBoundary.details")}
+								</summary>
+								<pre className="text-xs text-red-600 overflow-auto">
+									{this.state.error.toString()}
+									{this.state.errorInfo?.componentStack}
+								</pre>
+							</details>
+						)}
 						<button
 							onClick={() => window.location.reload()}
 							className="w-full px-6 py-3 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-700 transition-colors"
 						>
-							Освежи ја страницата
+							{t("errorBoundary.reload")}
 						</button>
 					</div>
 				</div>
@@ -62,3 +63,6 @@ export class ErrorBoundary extends Component {
 		return this.props.children
 	}
 }
+
+// Export with translation HOC
+export const ErrorBoundary = withTranslation()(ErrorBoundaryComponent)
