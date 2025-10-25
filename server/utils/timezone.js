@@ -12,7 +12,7 @@ function convertUTCToOrgTimezone(utcDate, timezone) {
 
 	try {
 		const dt = DateTime.fromJSDate(new Date(utcDate), { zone: "UTC" })
-		return dt.setZone(timezone).toISO()
+		return dt.setZone(timezone).toISO({ includeOffset: false })
 	} catch (error) {
 		console.error("Error converting UTC to org timezone:", error)
 		return utcDate
