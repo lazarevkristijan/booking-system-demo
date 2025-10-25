@@ -16,10 +16,10 @@ import {
 	deleteUserFromOrg,
 	getAllOrganizations,
 } from "../constants"
-import { useTransition } from "react"
+import { useTranslation } from "react-i18next"
 
 export const SuperAdminUsersPage = () => {
-	const { t } = useTransition()
+	const { t } = useTranslation()
 	const queryClient = useQueryClient()
 	const [currentPage, setCurrentPage] = useState(1)
 	const [filterOrgId, setFilterOrgId] = useState("")
