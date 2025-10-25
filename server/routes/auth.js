@@ -10,7 +10,7 @@ router.post("/login", async (req, res) => {
 	const { username, password } = req.body
 	const user = await User.findOne({ username }).populate(
 		"organizationId",
-		"name slug isActive"
+		"name slug isActive timezone"
 	)
 
 	if (!user)
@@ -41,8 +41,8 @@ router.post("/login", async (req, res) => {
 		await logAction(
 			{ userId: user._id, organizationId: user.organizationId._id },
 			{
-				action: req.t("actions.login"), // ✅
-				entityType: req.t("entities.system"), // ✅
+				action: req.t("actions.login"),
+				entityType: req.t("entities.system"),
 				entityId: user._id,
 				details: {},
 			}
@@ -50,10 +50,12 @@ router.post("/login", async (req, res) => {
 	} catch {}
 
 	res.json({
-		message: req.t("auth.successfulLogin"), // ✅
+		message: req.t("auth.successfulLogin"),
 		organization: {
+			id: user.organizationId._id,
 			name: user.organizationId.name,
 			slug: user.organizationId.slug,
+			timezone: user.organizationId.timezone || "UTC",
 		},
 	})
 })
@@ -97,7 +99,7 @@ router.get("/me", async (req, res) => {
 		const decoded = jwt.verify(token, process.env.JWT_SECRET)
 		const user = await User.findById(decoded.id)
 			.select("username role")
-			.populate("organizationId", "name slug")
+			.populate("organizationId", "name slug timezone")
 
 		if (!user) {
 			return res.status(404).json({ error: req.t("auth.userNotFound") }) // ✅
@@ -107,12 +109,14 @@ router.get("/me", async (req, res) => {
 			username: user.username,
 			role: user.role,
 			organization: {
+				id: user.organizationId._id,
 				name: user.organizationId.name,
 				slug: user.organizationId.slug,
+				timezone: user.organizationId.timezone || "UTC",
 			},
 		})
 	} catch (err) {
-		return res.status(401).json({ error: req.t("auth.invalidToken") }) // ✅
+		return res.status(401).json({ error: req.t("auth.invalidToken") })
 	}
 })
 

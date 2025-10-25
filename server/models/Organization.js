@@ -18,6 +18,12 @@ const organizationSchema = new mongoose.Schema(
 			type: Boolean,
 			default: true,
 		},
+		timezone: {
+			type: String,
+			default: "UTC",
+			required: true,
+			trim: true,
+		},
 	},
 	{
 		timestamps: true,

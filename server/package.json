@@ -26,6 +26,7 @@
 		"i18next-fs-backend": "^2.6.0",
 		"i18next-http-middleware": "^3.8.1",
 		"jsonwebtoken": "^9.0.2",
+		"luxon": "^3.7.2",
 		"mongodb": "^6.20.0",
 		"mongoose": "^8.18.1"
 	},

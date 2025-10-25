@@ -1,13 +1,21 @@
 const express = require("express")
 const router = express.Router()
 const Booking = require("../models/Booking.js")
+const Organization = require("../models/Organization.js")
 const { logAction } = require("../utils/logger.js")
+const {
+	convertOrgTimezoneToUTC,
+	convertUTCToOrgTimezone,
+} = require("../utils/timezone.js")
 
 // GET /api/bookings - List all bookings with related data
 router.get("/", async (req, res) => {
 	try {
 		const { start_date, end_date, month, year } = req.query
 		const organizationId = req.organizationId // From auth middleware
+
+		const organization = await Organization.findById(organizationId)
+		const timezone = organization?.timezone || "UTC"
 
 		let query = { organizationId }
 		let bookings = []
@@ -34,8 +42,8 @@ router.get("/", async (req, res) => {
 
 		const formattedBookings = bookings.map((booking) => ({
 			_id: booking._id,
-			startTime: booking.start_time,
-			endTime: booking.end_time,
+			startTime: convertUTCToOrgTimezone(booking.start_time, timezone),
+			endTime: convertUTCToOrgTimezone(booking.end_time, timezone),
 			price: booking.price,
 			notes: booking.notes,
 			employee: {
@@ -49,8 +57,8 @@ router.get("/", async (req, res) => {
 				notes: booking.client_id.notes,
 			},
 			services: booking.services,
-			created_at: booking.createdAt,
-			updated_at: booking.updatedAt,
+			created_at: convertUTCToOrgTimezone(booking.createdAt, timezone),
+			updated_at: convertUTCToOrgTimezone(booking.updatedAt, timezone),
 		}))
 
 		res.json(formattedBookings)
@@ -63,6 +71,12 @@ router.get("/", async (req, res) => {
 // GET /api/bookings/:id - Get single booking
 router.get("/:id", async (req, res) => {
 	try {
+		const organizationId = req.organizationId
+
+		// Get organization timezone
+		const organization = await Organization.findById(organizationId)
+		const timezone = organization?.timezone || "UTC"
+
 		const booking = await Booking.findOne({
 			_id: req.params.id,
 			organizationId: req.organizationId,
@@ -79,8 +93,8 @@ router.get("/:id", async (req, res) => {
 
 		const formattedBooking = {
 			id: booking._id,
-			startTime: booking.start_time,
-			endTime: booking.end_time,
+			startTime: convertUTCToOrgTimezone(booking.start_time, timezone),
+			endTime: convertUTCToOrgTimezone(booking.end_time, timezone),
 			price: booking.price,
 			notes: booking.notes,
 			employee: {
@@ -93,8 +107,8 @@ router.get("/:id", async (req, res) => {
 				phone: booking.client_id.phone,
 			},
 			services: booking.services,
-			created_at: booking.createdAt,
-			updated_at: booking.updatedAt,
+			created_at: convertUTCToOrgTimezone(booking.createdAt, timezone),
+			updated_at: convertUTCToOrgTimezone(booking.updatedAt, timezone),
 		}
 
 		res.json(formattedBooking)
@@ -108,6 +122,10 @@ router.get("/:id", async (req, res) => {
 router.post("/", async (req, res) => {
 	try {
 		const organizationId = req.organizationId // From auth middleware
+
+		// Get organization timezone
+		const organization = await Organization.findById(organizationId)
+		const timezone = organization?.timezone || "UTC"
 
 		const {
 			employee_id,
@@ -134,19 +152,23 @@ router.post("/", async (req, res) => {
 			})
 		}
 
+		// Convert incoming times from organization timezone to UTC
+		const startTimeUTC = convertOrgTimezoneToUTC(start_time, timezone)
+		const endTimeUTC = convertOrgTimezoneToUTC(end_time, timezone)
+
 		// Check for overlapping bookings
 		const overlappingBooking = await Booking.findOne({
 			organizationId, // FILTER BY ORGANIZATION
 			employee_id,
 			$or: [
 				{
-					start_time: { $lt: new Date(end_time) },
-					end_time: { $gt: new Date(start_time) },
+					start_time: { $lt: endTimeUTC },
+					end_time: { $gt: startTimeUTC },
 				},
 				{
 					start_time: {
-						$gte: new Date(start_time),
-						$lt: new Date(end_time),
+						$gte: startTimeUTC,
+						$lt: endTimeUTC,
 					},
 				},
 			],
@@ -164,13 +186,13 @@ router.post("/", async (req, res) => {
 			client_id,
 			$or: [
 				{
-					start_time: { $lt: new Date(end_time) },
-					end_time: { $gt: new Date(start_time) },
+					start_time: { $lt: endTimeUTC },
+					end_time: { $gt: startTimeUTC },
 				},
 				{
 					start_time: {
-						$gte: new Date(start_time),
-						$lt: new Date(end_time),
+						$gte: startTimeUTC,
+						$lt: endTimeUTC,
 					},
 				},
 			],
@@ -182,13 +204,13 @@ router.post("/", async (req, res) => {
 				.json({ error: req.t("errors.clientHasBooking") })
 		}
 
-		// Create booking
+		// Create booking with UTC times
 		const booking = new Booking({
 			organizationId,
 			employee_id,
 			client_id,
-			start_time: new Date(start_time),
-			end_time: new Date(end_time),
+			start_time: startTimeUTC,
+			end_time: endTimeUTC,
 			services: service_ids,
 			price: total_price,
 			notes: notes || "",
@@ -201,10 +223,11 @@ router.post("/", async (req, res) => {
 		await booking.populate("client_id", "full_name phone")
 		await booking.populate("services", "name duration price")
 
+		// Return with times converted back to organization timezone
 		const formattedBooking = {
 			id: booking._id,
-			startTime: booking.start_time,
-			endTime: booking.end_time,
+			startTime: convertUTCToOrgTimezone(booking.start_time, timezone),
+			endTime: convertUTCToOrgTimezone(booking.end_time, timezone),
 			price: booking.price,
 			notes: booking.notes,
 			employee: {
@@ -217,8 +240,8 @@ router.post("/", async (req, res) => {
 				phone: booking.client_id.phone,
 			},
 			services: booking.services,
-			created_at: booking.createdAt,
-			updated_at: booking.updatedAt,
+			created_at: convertUTCToOrgTimezone(booking.createdAt, timezone),
+			updated_at: convertUTCToOrgTimezone(booking.updatedAt, timezone),
 		}
 
 		try {
@@ -252,6 +275,10 @@ router.put("/:id", async (req, res) => {
 	try {
 		const { id } = req.params
 		const organizationId = req.organizationId // From auth middleware
+
+		// Get organization timezone
+		const organization = await Organization.findById(organizationId)
+		const timezone = organization?.timezone || "UTC"
 
 		const {
 			employee_id,
@@ -293,6 +320,10 @@ router.put("/:id", async (req, res) => {
 				.json({ error: req.t("errors.bookingNotFound") })
 		}
 
+		// Convert incoming times from organization timezone to UTC
+		const startTimeUTC = convertOrgTimezoneToUTC(start_time, timezone)
+		const endTimeUTC = convertOrgTimezoneToUTC(end_time, timezone)
+
 		// Check for overlapping bookings with EMPLOYEE (excluding current booking)
 		const overlappingEmployeeBooking = await Booking.findOne({
 			organizationId,
@@ -300,13 +331,13 @@ router.put("/:id", async (req, res) => {
 			_id: { $ne: id }, // Exclude current booking
 			$or: [
 				{
-					start_time: { $lt: new Date(end_time) },
-					end_time: { $gt: new Date(start_time) },
+					start_time: { $lt: endTimeUTC },
+					end_time: { $gt: startTimeUTC },
 				},
 				{
 					start_time: {
-						$gte: new Date(start_time),
-						$lt: new Date(end_time),
+						$gte: startTimeUTC,
+						$lt: endTimeUTC,
 					},
 				},
 			],
@@ -325,13 +356,13 @@ router.put("/:id", async (req, res) => {
 			_id: { $ne: id }, // Exclude current booking
 			$or: [
 				{
-					start_time: { $lt: new Date(end_time) },
-					end_time: { $gt: new Date(start_time) },
+					start_time: { $lt: endTimeUTC },
+					end_time: { $gt: startTimeUTC },
 				},
 				{
 					start_time: {
-						$gte: new Date(start_time),
-						$lt: new Date(end_time),
+						$gte: startTimeUTC,
+						$lt: endTimeUTC,
 					},
 				},
 			],
@@ -343,11 +374,11 @@ router.put("/:id", async (req, res) => {
 				.json({ error: req.t("errors.clientHasBooking") })
 		}
 
-		// Update booking
+		// Update booking with UTC times
 		existingBooking.employee_id = employee_id
 		existingBooking.client_id = client_id
-		existingBooking.start_time = new Date(start_time)
-		existingBooking.end_time = new Date(end_time)
+		existingBooking.start_time = startTimeUTC
+		existingBooking.end_time = endTimeUTC
 		existingBooking.services = service_ids
 		existingBooking.price = total_price
 		existingBooking.notes = notes || ""
@@ -359,10 +390,17 @@ router.put("/:id", async (req, res) => {
 		await existingBooking.populate("client_id", "full_name phone")
 		await existingBooking.populate("services", "name duration price")
 
+		// Return with times converted back to organization timezone
 		const formattedBooking = {
 			id: existingBooking._id,
-			startTime: existingBooking.start_time,
-			endTime: existingBooking.end_time,
+			startTime: convertUTCToOrgTimezone(
+				existingBooking.start_time,
+				timezone
+			),
+			endTime: convertUTCToOrgTimezone(
+				existingBooking.end_time,
+				timezone
+			),
 			price: existingBooking.price,
 			notes: existingBooking.notes,
 			employee: {
@@ -375,8 +413,14 @@ router.put("/:id", async (req, res) => {
 				phone: existingBooking.client_id.phone,
 			},
 			services: existingBooking.services,
-			created_at: existingBooking.createdAt,
-			updated_at: existingBooking.updatedAt,
+			created_at: convertUTCToOrgTimezone(
+				existingBooking.createdAt,
+				timezone
+			),
+			updated_at: convertUTCToOrgTimezone(
+				existingBooking.updatedAt,
+				timezone
+			),
 		}
 
 		try {

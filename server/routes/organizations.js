@@ -93,12 +93,21 @@ router.post("/", requireSuperAdmin, async (req, res) => {
 router.put("/:id", requireSuperAdmin, async (req, res) => {
 	try {
 		const { id } = req.params
-		const { name, slug, isActive } = req.body
+		const { name, slug, isActive, timezone } = req.body
 
 		if (!name || !slug) {
 			return res
 				.status(400)
 				.json({ error: req.t("errors.nameAndSlugRequired") })
+		}
+
+		if (timezone) {
+			const validTimezones = Intl.supportedValuesOf("timeZone")
+			if (!validTimezones.includes(timezone)) {
+				return res.status(400).json({
+					error: "Invalid timezone provided",
+				})
+			}
 		}
 
 		// Check if slug is taken by another org
@@ -112,13 +121,20 @@ router.put("/:id", requireSuperAdmin, async (req, res) => {
 				.json({ error: req.t("errors.organizationSlugExists") })
 		}
 
+		const updateData = {
+			name: name.trim(),
+			slug: slug.toLowerCase().trim(),
+			isActive: isActive !== undefined ? isActive : true,
+		}
+
+		// Only update timezone if provided
+		if (timezone !== undefined) {
+			updateData.timezone = timezone
+		}
+
 		const organization = await Organization.findByIdAndUpdate(
 			id,
-			{
-				name: name.trim(),
-				slug: slug.toLowerCase().trim(),
-				isActive: isActive !== undefined ? isActive : true,
-			},
+			updateData,
 			{ new: true, runValidators: true }
 		)
 
@@ -131,6 +147,62 @@ router.put("/:id", requireSuperAdmin, async (req, res) => {
 		res.json(organization)
 	} catch (error) {
 		console.error("Error updating organization:", error)
+		res.status(500).json({ error: req.t("errors.serverError") })
+	}
+})
+
+// PATCH update organization settings (admin only - for their own org)
+router.patch("/:id/settings", async (req, res) => {
+	try {
+		const { id } = req.params
+		const { timezone } = req.body
+
+		// Check if user is admin or superadmin
+		if (req.userRole !== "admin" && req.userRole !== "superadmin") {
+			return res.status(403).json({ error: req.t("errors.adminOnly") })
+		}
+
+		// Verify the organization ID matches the user's organization
+		// (unless they're a superadmin)
+		if (
+			req.userRole !== "superadmin" &&
+			req.organizationId.toString() !== id
+		) {
+			return res
+				.status(403)
+				.json({ error: req.t("errors.cannotModifyOtherOrganization") })
+		}
+
+		// Validate timezone if provided
+		if (timezone) {
+			const validTimezones = Intl.supportedValuesOf("timeZone")
+			if (!validTimezones.includes(timezone)) {
+				return res.status(400).json({
+					error: "Invalid timezone provided",
+				})
+			}
+		}
+
+		const updateData = {}
+		if (timezone !== undefined) {
+			updateData.timezone = timezone
+		}
+
+		const organization = await Organization.findByIdAndUpdate(
+			id,
+			updateData,
+			{ new: true, runValidators: true }
+		)
+
+		if (!organization) {
+			return res
+				.status(404)
+				.json({ error: req.t("errors.organizationNotFound") })
+		}
+
+		res.json(organization)
+	} catch (error) {
+		console.error("Error updating organization settings:", error)
 		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
