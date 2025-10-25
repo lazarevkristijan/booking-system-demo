@@ -106,7 +106,11 @@ export const DashboardPage = () => {
 
 	// Handler for adding new booking to state
 	const handleBookingCreated = useCallback((newBooking) => {
-		if (newBooking !== null) {
+		if (
+			newBooking &&
+			typeof newBooking === "object" &&
+			typeof newBooking.price === "number"
+		) {
 			setBookings((prevBookings) => [...prevBookings, newBooking])
 			setViewMode("month")
 		}
@@ -479,7 +483,7 @@ export const DashboardPage = () => {
 											>
 												<div className="text-xs sm:text-sm font-medium text-slate-500">
 													{day.toLocaleDateString(
-														t('common.locale'),
+														t("common.locale"),
 														{
 															weekday: "short",
 														}
