@@ -72,7 +72,7 @@ export const BookingDetailsModal = ({
 						<div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
 							<p>
 								<span className="font-medium text-slate-700">
-									{t("clients.client")}:{" "}
+									{t("bookings.client")}:{" "}
 								</span>
 								{booking.client?.name || "—"}
 							</p>
