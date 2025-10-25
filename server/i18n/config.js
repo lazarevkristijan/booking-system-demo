@@ -7,7 +7,7 @@ i18n.use(Backend)
 	.use(middleware.LanguageDetector)
 	.init({
 		fallbackLng: "en",
-		preload: ["en", "mk"],
+		preload: ["en", "mk", "bg"],
 		backend: {
 			loadPath: path.join(__dirname, "locales/{{lng}}.json"),
 		},

@@ -15,7 +15,7 @@ i18n.use(LanguageDetector) // Detects user language
 	.use(initReactI18next) // Passes i18n down to react-i18next
 	.init({
 		resources,
-		fallbackLng: "mk",
+		fallbackLng: "en",
 		lng: localStorage.getItem("language") || undefined, // Use saved language or auto-detect
 		debug: false,
 
