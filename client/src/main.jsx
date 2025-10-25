@@ -3,6 +3,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { App } from "./App.jsx"
 import "./index.css"
 import { ErrorBoundary } from "./components/ErrorBoundary.jsx"
+import "./i18n/config" // ✅ Add this import
+import "./utils/axios-config" // ✅ Add this
 
 const queryClient = new QueryClient({
 	defaultOptions: {

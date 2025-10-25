@@ -12,9 +12,12 @@ import {
 } from "../constants"
 import { ConnectionStatus } from "./ConnectionStatus"
 import { useQueryClient } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
+import { LanguageSwitcher } from "./LanguageSwitcher"
 
 // Main Layout component
 export const Layout = ({ children, onLogout, userRole }) => {
+	const { t } = useTranslation() // ✅ Add
 	const [isMenuOpen, setIsMenuOpen] = useState(false)
 	const location = useLocation()
 	const navigate = useNavigate()
@@ -43,6 +46,25 @@ export const Layout = ({ children, onLogout, userRole }) => {
 		}
 		fetchUser()
 	}, [])
+
+	// Update navigation items to use translations
+	const translatedNavItems = navItems.map((item) => ({
+		...item,
+		name: t(`navigation.${item.path.slice(1)}`), // dashboard, employees, etc.
+	}))
+
+	const translatedAdminNavItems = adminNavItems.map((item) => ({
+		...item,
+		name: t(`navigation.${item.path.slice(1)}`),
+	}))
+
+	const translatedSuperadminNavItems = superadminNavItems.map((item) => {
+		const key = item.path.split("/").pop() // organizations, users
+		return {
+			...item,
+			name: t(`navigation.${key}`),
+		}
+	})
 
 	const isAdmin = userRole === "admin"
 	const isSuperAdmin = userRole === "superadmin"
@@ -94,7 +116,7 @@ export const Layout = ({ children, onLogout, userRole }) => {
 						<nav className="flex-1 px-2 py-4 space-y-1">
 							{/* Regular nav items - only show if not superadmin */}
 							{!isSuperAdmin &&
-								navItems.map((item) => (
+								translatedNavItems.map((item) => (
 									<Link
 										key={item.path}
 										to={item.path}
@@ -116,10 +138,10 @@ export const Layout = ({ children, onLogout, userRole }) => {
 									<div className="px-4 py-2">
 										<div className="border-t border-slate-200"></div>
 										<p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-2">
-											Администрација
+											{t("navigation.administration")}
 										</p>
 									</div>
-									{adminNavItems.map((item) => (
+									{translatedAdminNavItems.map((item) => (
 										<Link
 											key={item.path}
 											to={item.path}
@@ -142,43 +164,53 @@ export const Layout = ({ children, onLogout, userRole }) => {
 								<>
 									<div className="px-4 py-2">
 										<p className="text-xs font-semibold text-purple-500 uppercase tracking-wider">
-											Супер Администратор
+											{t("navigation.superAdmin")}
 										</p>
 									</div>
-									{superadminNavItems.map((item) => (
-										<Link
-											key={item.path}
-											to={item.path}
-											className={`flex items-center px-4 py-3 rounded-lg font-medium text-base transition-colors ${
-												location.pathname === item.path
-													? "bg-purple-100 text-purple-900"
-													: "text-slate-700 hover:bg-slate-50"
-											}`}
-											onClick={() => setIsMenuOpen(false)}
-										>
-											<item.icon className="h-5 w-5 mr-2" />
-											{item.name}
-										</Link>
-									))}
+									{translatedSuperadminNavItems.map(
+										(item) => (
+											<Link
+												key={item.path}
+												to={item.path}
+												className={`flex items-center px-4 py-3 rounded-lg font-medium text-base transition-colors ${
+													location.pathname ===
+													item.path
+														? "bg-purple-100 text-purple-900"
+														: "text-slate-700 hover:bg-slate-50"
+												}`}
+												onClick={() =>
+													setIsMenuOpen(false)
+												}
+											>
+												<item.icon className="h-5 w-5 mr-2" />
+												{item.name}
+											</Link>
+										)
+									)}
 								</>
 							)}
 
-							<button
-								className="flex items-center w-full px-4 py-3 rounded-lg font-medium text-base text-slate-700 hover:bg-slate-50 transition-colors mt-2"
-								onClick={() => {
-									setIsMenuOpen(false)
-									handleLogout()
-								}}
-							>
-								<LogOut className="h-5 w-5 mr-2" />
-								Одјава
-							</button>
+							<div className="border-t border-slate-200">
+								<LanguageSwitcher />
 
-							<div
-								className={`flex items-center px-4 py-3 rounded-lg font-medium text-base transition-colors text-slate-600 bg-slate-50 border border-slate-200`}
-							>
-								<User className="h-5 w-5 mr-2" />
-								Корисник: {currentUsername || "Вчитување..."}
+								<button
+									className="flex items-center w-full px-4 py-3 rounded-lg font-medium text-base text-slate-700 hover:bg-slate-50 transition-colors mt-2"
+									onClick={() => {
+										setIsMenuOpen(false)
+										handleLogout()
+									}}
+								>
+									<LogOut className="h-5 w-5 mr-2" />
+									{t("auth.logout")}
+								</button>
+
+								<div
+									className={`flex items-center px-4 py-3 rounded-lg font-medium text-base transition-colors text-slate-600 bg-slate-50 border border-slate-200`}
+								>
+									<User className="h-5 w-5 mr-2" />
+									{t("navigation.currentUser")}:{" "}
+									{currentUsername || t("common.loading")}
+								</div>
 							</div>
 						</nav>
 					</div>
@@ -203,7 +235,7 @@ export const Layout = ({ children, onLogout, userRole }) => {
 					<nav className="flex-1 px-2 py-4 space-y-1">
 						{/* Regular nav items - only show if not superadmin */}
 						{!isSuperAdmin &&
-							navItems.map((item) => (
+							translatedNavItems.map((item) => (
 								<Link
 									key={item.path}
 									to={item.path}
@@ -227,7 +259,7 @@ export const Layout = ({ children, onLogout, userRole }) => {
 										Администрација
 									</p>
 								</div>
-								{adminNavItems.map((item) => (
+								{translatedAdminNavItems.map((item) => (
 									<Link
 										key={item.path}
 										to={item.path}
@@ -252,7 +284,7 @@ export const Layout = ({ children, onLogout, userRole }) => {
 										Супер Администратор
 									</p>
 								</div>
-								{superadminNavItems.map((item) => (
+								{translatedSuperadminNavItems.map((item) => (
 									<Link
 										key={item.path}
 										to={item.path}
@@ -272,16 +304,19 @@ export const Layout = ({ children, onLogout, userRole }) => {
 							className={`flex items-center px-4 py-3 rounded-lg font-medium text-base transition-colors text-slate-600 bg-slate-50 border border-slate-200`}
 						>
 							<User className="h-5 w-5 mr-2" />
-							Корисник: {currentUsername || "Вчитување..."}
+							{t("navigation.currentUser")}:{" "}
+							{currentUsername || t("common.loading")}
 						</div>
 					</nav>
-					<div className="px-6 py-4">
+					<div className="px-6 py-4 space-y-2">
+						<LanguageSwitcher />
+
 						<button
 							className="flex items-center w-full px-4 py-3 rounded-lg font-medium text-base text-slate-700 hover:bg-slate-50 transition-colors"
 							onClick={handleLogout}
 						>
 							<LogOut className="h-5 w-5 mr-2" />
-							Одјава
+							{t("auth.logout")}
 						</button>
 					</div>
 				</aside>

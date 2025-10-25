@@ -1,14 +1,22 @@
 import { X, AlertTriangle } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 export const ConfirmModal = ({
 	isOpen,
 	onClose,
 	onConfirm,
-	title = "Дали сте сигурни?",
-	message = "Навистина ли сакате да го избришете овој елемент? Оваа акција е неповратна.",
-	confirmText = "Да, избриши",
-	cancelText = "Откажи",
+	title,
+	message,
+	confirmText,
+	cancelText,
 }) => {
+	const { t } = useTranslation()
+
+	const defaultTitle = title || t("common.areYouSure")
+	const defaultMessage = message || t("common.deleteConfirmMessage")
+	const defaultConfirmText = confirmText || t("common.yesDelete")
+	const defaultCancelText = cancelText || t("common.cancel")
+
 	if (!isOpen) return null
 
 	return (
@@ -25,7 +33,7 @@ export const ConfirmModal = ({
 					{/* Header */}
 					<div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
 						<h3 className="text-base sm:text-lg font-semibold text-slate-800">
-							{title}
+							{defaultTitle}
 						</h3>
 						<button
 							onClick={onClose}
@@ -39,7 +47,9 @@ export const ConfirmModal = ({
 					{/* Content */}
 					<div className="px-5 py-6 flex flex-col items-center text-center space-y-3">
 						<AlertTriangle className="w-10 h-10 text-amber-500" />
-						<p className="text-sm text-slate-700">{message}</p>
+						<p className="text-sm text-slate-700">
+							{defaultMessage}
+						</p>
 					</div>
 
 					{/* Footer */}
@@ -48,13 +58,13 @@ export const ConfirmModal = ({
 							onClick={onClose}
 							className="px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 min-h-[40px]"
 						>
-							{cancelText}
+							{defaultCancelText}
 						</button>
 						<button
 							onClick={onConfirm}
 							className="px-4 py-2.5 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 min-h-[40px]"
 						>
-							{confirmText}
+							{defaultConfirmText}
 						</button>
 					</div>
 				</div>

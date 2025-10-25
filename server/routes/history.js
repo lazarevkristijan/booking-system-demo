@@ -13,7 +13,7 @@ router.get("/", async (req, res) => {
 		const organizationId = req.organizationId // From auth middleware
 		if (!organizationId) {
 			return res.status(400).json({
-				error: "Идентификатор на организација е задолжителен",
+				error: req.t("validation.organizationRequired"),
 			})
 		}
 		q.organizationId = organizationId
@@ -39,7 +39,7 @@ router.get("/", async (req, res) => {
 		})
 	} catch (error) {
 		console.error("Error fetching history:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 

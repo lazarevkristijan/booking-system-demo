@@ -19,6 +19,7 @@ import {
 	searchClientsApi,
 } from "../constants"
 import { createErrorModal } from "../constants"
+import { useTranslation } from "react-i18next"
 
 export const BookingModal = ({
 	isOpen,
@@ -28,6 +29,7 @@ export const BookingModal = ({
 	existingBookings = [],
 	selectedEmployeeId,
 }) => {
+	const { t } = useTranslation()
 	// Step state
 	const [currentStep, setCurrentStep] = useState(selectedEmployeeId ? 2 : 1)
 
@@ -292,7 +294,7 @@ export const BookingModal = ({
 		if (!selectedData.employee) {
 			createErrorModal({
 				data: {
-					error: "Ве молам изберете вработен.",
+					error: t("bookings.errorSelectEmployee"),
 				},
 			})
 			return
@@ -301,7 +303,7 @@ export const BookingModal = ({
 		if (selectedData.services.length === 0) {
 			createErrorModal({
 				data: {
-					error: "Ве молам изберете барем една услуга.",
+					error: t("bookings.errorSelectService"),
 				},
 			})
 			return
@@ -312,7 +314,7 @@ export const BookingModal = ({
 		) {
 			createErrorModal({
 				data: {
-					error: "Ве молам изберете клиент или внесете нов клиент.",
+					error: t("bookings.errorSelectClient"),
 				},
 			})
 			return
@@ -320,7 +322,7 @@ export const BookingModal = ({
 		if (!selectedDateTime) {
 			createErrorModal({
 				data: {
-					error: "Нема избрана дата/час за резервацијата.",
+					error: t("bookings.errorNoDateTime"),
 				},
 			})
 			return
@@ -378,9 +380,9 @@ export const BookingModal = ({
 
 	// UI helpers
 	const steps = [
-		{ number: 1, title: "Избор на вработен", icon: User },
-		{ number: 2, title: "Избор на услуги", icon: Clock },
-		{ number: 3, title: "Податоци за клиентот", icon: User },
+		{ number: 1, title: t("bookings.stepEmployee"), icon: User },
+		{ number: 2, title: t("bookings.stepServices"), icon: Clock },
+		{ number: 3, title: t("bookings.stepClient"), icon: User },
 	]
 
 	if (!isOpen) return null
@@ -400,13 +402,13 @@ export const BookingModal = ({
 					<div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-200">
 						<div className="min-w-0 flex-1 mr-4">
 							<h3 className="text-base sm:text-lg font-semibold text-slate-800 font-poppins truncate">
-								Нова резервација
+								{t("bookings.newBooking")}
 							</h3>
 							<p className="text-xs sm:text-sm text-slate-600 mt-1 truncate">
 								{selectedDateTime
 									? alignToThirtyMinutes(
 											selectedDateTime
-									  ).toLocaleString("mk-MK")
+									  ).toLocaleString(t('common.locale'))
 									: ""}
 							</p>
 						</div>
@@ -484,11 +486,13 @@ export const BookingModal = ({
 						{currentStep === 1 && (
 							<div>
 								<h4 className="text-base sm:text-lg font-medium text-slate-800 mb-4">
-									Изберете слободен вработен
+									{t("bookings.selectAvailableEmployee")}
 								</h4>
 								<div className="grid gap-3">
 									{loadingEmployees ? (
-										<div>Вчитување на вработени...</div>
+										<div>
+											{t("bookings.loadingEmployees")}
+										</div>
 									) : (
 										localEmployees.map((employee) => (
 											<button
@@ -521,8 +525,12 @@ export const BookingModal = ({
 														}`}
 													>
 														{employee.available
-															? "Слободен"
-															: "Зафатен"}
+															? t(
+																	"bookings.available"
+															  )
+															: t(
+																	"bookings.busy"
+															  )}
 													</span>
 												</div>
 											</button>
@@ -536,15 +544,14 @@ export const BookingModal = ({
 						{currentStep === 2 && (
 							<div>
 								<h4 className="text-base sm:text-lg font-medium text-slate-800 mb-4">
-									Изберете услуги
+									{t("bookings.selectServicesTitle")}
 								</h4>
 								<p className="text-sm text-slate-600 mb-4">
-									Можете да изберете повеќе услуги за оваа
-									резервација
+									{t("bookings.selectServicesSubtitle")}
 								</p>
 
 								{loadingServices ? (
-									<div>Вчитување на услуги...</div>
+									<div>{t("bookings.loadingServices")}</div>
 								) : (
 									<div className="grid gap-3">
 										{(servicesData || []).map((service) => {
@@ -611,7 +618,9 @@ export const BookingModal = ({
 																<span className="font-semibold text-slate-800 text-sm sm:text-base">
 																	{service.price ||
 																		0}{" "}
-																	ден.
+																	{t(
+																		"common.currency"
+																	)}
 																</span>
 															</div>
 															<div className="flex items-center text-xs sm:text-sm text-slate-500">
@@ -619,7 +628,9 @@ export const BookingModal = ({
 																{
 																	service.duration
 																}{" "}
-																минути
+																{t(
+																	"common.minutes"
+																)}
 															</div>
 														</div>
 													</div>
@@ -632,7 +643,7 @@ export const BookingModal = ({
 								{selectedData.services.length > 0 && (
 									<div className="mt-4 p-3 bg-slate-50 rounded-lg">
 										<div className="text-sm font-medium text-slate-700 mb-2">
-											Избрани услуги:
+											{t("bookings.selectedServices")}
 										</div>
 										<div className="flex flex-wrap gap-2">
 											{selectedData.services.map(
@@ -647,9 +658,12 @@ export const BookingModal = ({
 											)}
 										</div>
 										<div className="mt-2 text-sm text-slate-600">
-											Вкупно време: {totals.totalDuration}{" "}
-											минути • Вкупна цена:{" "}
-											{totals.totalPrice.toFixed(2)} ден.
+											{t("bookings.totalTime")}:{" "}
+											{totals.totalDuration}{" "}
+											{t("common.minutes")} •{" "}
+											{t("bookings.totalCost")}:{" "}
+											{totals.totalPrice.toFixed(2)}{" "}
+											{t("common.currency")}
 										</div>
 									</div>
 								)}
@@ -660,7 +674,7 @@ export const BookingModal = ({
 						{currentStep === 3 && (
 							<div>
 								<h4 className="text-base sm:text-lg font-medium text-slate-800 mb-4">
-									Информации за клиент
+									{t("bookings.clientInfo")}
 								</h4>
 								<div className="space-y-4">
 									<div
@@ -668,7 +682,7 @@ export const BookingModal = ({
 										ref={suggestionsRef}
 									>
 										<label className="block text-sm font-medium text-slate-700 mb-2">
-											Пребарување на постоечки клиент
+											{t("clients.searchExisting")}
 										</label>
 										<div className="relative">
 											<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -699,7 +713,9 @@ export const BookingModal = ({
 													)
 														setShowSuggestions(true)
 												}}
-												placeholder="Внесете име на клиент..."
+												placeholder={t(
+													"common.enterName"
+												)}
 												className="w-full pl-10 pr-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent touch-manipulation"
 											/>
 										</div>
@@ -743,7 +759,9 @@ export const BookingModal = ({
 											<div className="flex items-center justify-between">
 												<div>
 													<div className="font-medium text-green-800">
-														Избран клиент:
+														{t(
+															"clients.selectedClient"
+														)}
 													</div>
 													<div>
 														<p>
@@ -791,7 +809,9 @@ export const BookingModal = ({
 												</div>
 												<div className="relative flex justify-center text-sm">
 													<span className="px-2 bg-white text-slate-500">
-														или креирајте нов клиент
+														{t(
+															"clients.orCreateNew"
+														)}
 													</span>
 												</div>
 											</div>
@@ -799,7 +819,7 @@ export const BookingModal = ({
 											<div className="grid grid-cols-1 gap-4">
 												<div>
 													<label className="block text-sm font-medium text-slate-700 mb-2">
-														Име и Презиме
+														{t("clients.fullName")}
 													</label>
 													<input
 														type="text"
@@ -822,12 +842,16 @@ export const BookingModal = ({
 															)
 														}
 														className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent touch-manipulation"
-														placeholder="Внесете име и презиме"
+														placeholder={t(
+															"common.enterName"
+														)}
 													/>
 												</div>
 												<div>
 													<label className="block text-sm font-medium text-slate-700 mb-2">
-														Телефонски број
+														{t(
+															"clients.phoneNumber"
+														)}
 													</label>
 													<input
 														type="tel"
@@ -850,7 +874,9 @@ export const BookingModal = ({
 															)
 														}
 														className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent touch-manipulation"
-														placeholder="Внесете телефонски број"
+														placeholder={t(
+															"common.enterPhone"
+														)}
 													/>
 												</div>
 											</div>
@@ -863,14 +889,14 @@ export const BookingModal = ({
 										</div>
 										<div className="relative flex justify-center text-sm">
 											<span className="px-2 bg-white text-slate-500">
-												дополнително
+												{t("common.additional")}
 											</span>
 										</div>
 									</div>
 
 									<div>
 										<label className="block text-sm font-medium text-slate-700 mb-2">
-											Белешки за резервацијата
+											{t("bookings.notes")}
 										</label>
 										<textarea
 											value={selectedData.notes}
@@ -882,7 +908,9 @@ export const BookingModal = ({
 											}
 											maxLength={100}
 											className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent touch-manipulation resize-none"
-											placeholder="Внесете белешки за резервацијата (по избор)..."
+											placeholder={t(
+												"bookings.notesPlaceholder"
+											)}
 										/>
 										<p className="text-right text-slate-500">
 											{selectedData?.notes?.length}
@@ -928,8 +956,10 @@ export const BookingModal = ({
 														: "bg-gray-700 hover:bg-gray-800"
 												}`}
 											>
-												Вкупно: {totals.totalPrice} ден.
-												| Рачно прилагодување
+												{t("bookings.totalPrice")}:{" "}
+												{totals.totalPrice}{" "}
+												{t("common.currency")} |{" "}
+												{t("bookings.priceOverride")}
 											</button>
 										</div>
 
@@ -937,7 +967,7 @@ export const BookingModal = ({
 											<div className="space-y-2">
 												<div>
 													<label className="text-xs text-gray-600">
-														Нова цена:
+														{t("bookings.newPrice")}
 													</label>
 													<input
 														type="number"
@@ -970,7 +1000,9 @@ export const BookingModal = ({
 															)
 														}}
 														className="w-full border rounded px-2 py-1 text-sm"
-														placeholder="Внесете цена..."
+														placeholder={t(
+															"common.enterPrice"
+														)}
 													/>
 												</div>
 											</div>
@@ -989,7 +1021,7 @@ export const BookingModal = ({
 							className="inline-flex items-center px-4 py-3 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-h-[44px]"
 						>
 							<ChevronLeft className="h-4 w-4 mr-1" />
-							Назад
+							{t("common.back")}
 						</button>
 
 						<div className="flex gap-3">
@@ -999,7 +1031,7 @@ export const BookingModal = ({
 									disabled={!canProceed()}
 									className="inline-flex items-center px-6 py-3 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-h-[44px]"
 								>
-									Напред
+									{t("common.forward")}
 									<ChevronRight className="h-4 w-4 ml-1" />
 								</button>
 							) : (
@@ -1012,8 +1044,8 @@ export const BookingModal = ({
 									className="inline-flex items-center px-6 py-3 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-h-[44px]"
 								>
 									{bookingMutation.isLoading
-										? "Креирање..."
-										: "Креирај резервација"}
+										? t("common.creating")
+										: t("bookings.createBooking")}
 									<Check className="h-4 w-4 ml-1" />
 								</button>
 							)}

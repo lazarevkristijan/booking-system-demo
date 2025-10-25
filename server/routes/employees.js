@@ -13,7 +13,7 @@ router.get("/", async (req, res) => {
 		const organizationId = req.organizationId // From auth middleware
 		if (!organizationId) {
 			return res.status(400).json({
-				error: "Идентификатор на организација е задолжителен",
+				error: req.t("validation.organizationRequired"),
 			})
 		}
 		filter.organizationId = organizationId
@@ -22,7 +22,7 @@ router.get("/", async (req, res) => {
 		res.json(employees)
 	} catch (error) {
 		console.error("Error fetching employees:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 
@@ -32,14 +32,14 @@ router.get("/available", async (req, res) => {
 		const { start_time, end_time } = req.query
 		if (!start_time || !end_time) {
 			return res.status(400).json({
-				error: "Времето за почеток и крај на услугата се задолжителни",
+				error: req.t("validation.timeRequired"),
 			})
 		}
 
 		const organizationId = req.organizationId // From auth middleware
 		if (!organizationId) {
 			return res.status(400).json({
-				error: "Идентификатор на организација е задолжителен",
+				error: req.t("validation.organizationRequired"),
 			})
 		}
 
@@ -63,7 +63,7 @@ router.get("/available", async (req, res) => {
 		res.json(employeesWithAvailability)
 	} catch (error) {
 		console.error("Error checking employee availability:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 
@@ -76,13 +76,15 @@ router.get("/:id", async (req, res) => {
 		})
 
 		if (!employee) {
-			return res.status(404).json({ error: "Служителот не е пронајден" })
+			return res
+				.status(404)
+				.json({ error: req.t("errors.employeeNotFound") })
 		}
 
 		res.json(employee)
 	} catch (error) {
 		console.error("Error fetching employee:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 
@@ -93,13 +95,13 @@ router.post("/", async (req, res) => {
 		if (!name || name.trim() === "") {
 			return res
 				.status(400)
-				.json({ error: "Полето за име е задолжително" })
+				.json({ error: req.t("validation.nameRequired") })
 		}
 
 		const organizationId = req.organizationId // From auth middleware
 		if (!organizationId) {
 			return res.status(400).json({
-				error: "Идентификатор на организација е задолжителен",
+				error: req.t("validation.organizationRequired"),
 			})
 		}
 
@@ -108,17 +110,17 @@ router.post("/", async (req, res) => {
 
 		try {
 			await logAction(req, {
-				action: "Креирање",
-				entityType: "служител",
+				action: req.t("actions.create"),
+				entityType: req.t("entities.employee"),
 				entityId: employee._id,
-				details: `име: ${employee.name}`,
+				details: `${req.t("entities.name")}: ${employee.name}`,
 			})
 		} catch {}
 
 		res.status(201).json(employee)
 	} catch (error) {
 		console.error("Error creating employee:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 
@@ -130,13 +132,15 @@ router.put("/:id", async (req, res) => {
 
 		if (!name || name.trim() === "" || isHidden === undefined) {
 			return res.status(400).json({
-				error: "Полињата за име и за активност на служителот се задолжителни",
+				error: req.t("validation.employeeFieldsRequired"),
 			})
 		}
 
 		const prevEmployee = await Employee.findById(id)
 		if (!prevEmployee) {
-			return res.status(404).json({ error: "Служителот не е пронајден" })
+			return res
+				.status(404)
+				.json({ error: req.t("errors.employeeNotFound") })
 		}
 		if (
 			prevEmployee.organizationId.toString() !==
@@ -144,7 +148,7 @@ router.put("/:id", async (req, res) => {
 		) {
 			return res
 				.status(403)
-				.json({ error: "Немате пристап до овој служител" })
+				.json({ error: req.t("errors.noAccessToEmployee") })
 		}
 
 		const employee = await Employee.findByIdAndUpdate(
@@ -154,22 +158,26 @@ router.put("/:id", async (req, res) => {
 		)
 
 		if (!employee) {
-			return res.status(404).json({ error: "Служителот не е пронајден" })
+			return res
+				.status(404)
+				.json({ error: req.t("errors.employeeNotFound") })
 		}
 
 		try {
 			await logAction(req, {
-				action: "Уредување",
-				entityType: "служител",
+				action: req.t("actions.update"),
+				entityType: req.t("entities.employee"),
 				entityId: employee._id,
-				details: `име: ${prevEmployee.name}->${employee.name}`,
+				details: `${req.t("entities.name")}: ${prevEmployee.name}->${
+					employee.name
+				}`,
 			})
 		} catch {}
 
 		res.json(employee)
 	} catch (error) {
 		console.error("Error updating employee:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 
@@ -183,7 +191,9 @@ router.delete("/:id", async (req, res) => {
 			organizationId: req.organizationId,
 		})
 		if (!employee) {
-			return res.status(404).json({ error: "Служителот не е пронајден" })
+			return res
+				.status(404)
+				.json({ error: req.t("errors.employeeNotFound") })
 		}
 
 		const futureBookings = await Booking.countDocuments({
@@ -193,7 +203,7 @@ router.delete("/:id", async (req, res) => {
 
 		if (futureBookings > 0) {
 			return res.status(400).json({
-				error: "Не може да се избрише служител со претстојни резервации",
+				error: req.t("errors.employeeHasBookings"),
 			})
 		}
 
@@ -201,17 +211,17 @@ router.delete("/:id", async (req, res) => {
 
 		try {
 			await logAction(req, {
-				action: "Бришење",
-				entityType: "служител",
+				action: req.t("actions.delete"),
+				entityType: req.t("entities.employee"),
 				entityId: employee._id,
-				details: `име: ${employee.name}`,
+				details: `${req.t("entities.name")}: ${employee.name}`,
 			})
 		} catch {}
 
-		res.json({ message: "Служителот е избришан" })
+		res.json({ message: req.t("success.employeeDeleted") })
 	} catch (error) {
 		console.error("Error deleting employee:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 
@@ -227,22 +237,24 @@ router.patch("/:id/restore", async (req, res) => {
 		)
 
 		if (!employee) {
-			return res.status(404).json({ error: "Служителот не е пронајден" })
+			return res
+				.status(404)
+				.json({ error: req.t("errors.employeeNotFound") })
 		}
 
 		try {
 			await logAction(req, {
-				action: "Враќање",
-				entityType: "служител",
+				action: req.t("actions.restore"),
+				entityType: req.t("entities.employee"),
 				entityId: employee._id,
-				details: `име: ${employee.name}`,
+				details: `${req.t("entities.name")}: ${employee.name}`,
 			})
 		} catch {}
 
-		res.json({ message: "Служителот е вратен", employee })
+		res.json({ message: req.t("success.employeeRestored"), employee })
 	} catch (error) {
 		console.error("Error restoring employee:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 

@@ -1,16 +1,11 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import {
-	Users,
-	Plus,
-	Edit2,
-	Trash2,
-	Shield,
-	User as UserIcon,
-} from "lucide-react"
+import { Plus, Edit2, Trash2, Shield, User as UserIcon } from "lucide-react"
 import { getUsers, createUser, updateUser, deleteUser } from "../constants"
+import { useTranslation } from "react-i18next"
 
 export const UsersPage = () => {
+	const { t } = useTranslation()
 	const queryClient = useQueryClient()
 	const [showModal, setShowModal] = useState(false)
 	const [selectedUser, setSelectedUser] = useState(null)
@@ -90,11 +85,7 @@ export const UsersPage = () => {
 	}
 
 	const handleDelete = (user) => {
-		if (
-			window.confirm(
-				`Дали сте сигурни дека сакате да го избришете корисникот ${user.username}?`
-			)
-		) {
+		if (window.confirm(`${t("users.deleteConfirm")} - ${user.username}?`)) {
 			deleteMutation.mutate(user._id)
 		}
 	}
@@ -118,10 +109,10 @@ export const UsersPage = () => {
 				{/* Header */}
 				<div className="mb-6">
 					<h1 className="text-2xl sm:text-3xl font-bold text-slate-800 font-poppins">
-						Корисници
+						{t("users.title")}
 					</h1>
 					<p className="text-slate-600 mt-1 text-sm sm:text-base">
-						Управување со корисниците во вашата организација
+						{t("users.subtitle")}
 					</p>
 				</div>
 
@@ -132,7 +123,7 @@ export const UsersPage = () => {
 						className="inline-flex items-center justify-center px-4 py-2 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-700 transition-colors min-h-[44px]"
 					>
 						<Plus className="h-5 w-5 mr-2" />
-						Додади Корисник
+						{t("users.addUser")}
 					</button>
 				</div>
 
@@ -143,16 +134,16 @@ export const UsersPage = () => {
 							<thead className="bg-slate-50">
 								<tr>
 									<th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-										Корисник
+										{t("users.username")}
 									</th>
 									<th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-										Улога
+										{t("users.role")}
 									</th>
 									<th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-										Креиран
+										{t("users.created")}
 									</th>
 									<th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
-										Акции
+										{t("common.actions")}
 									</th>
 								</tr>
 							</thead>
@@ -185,12 +176,14 @@ export const UsersPage = () => {
 												{user.role === "admin" ? (
 													<>
 														<Shield className="h-3 w-3 mr-1" />{" "}
-														Администратор
+														{t(
+															"users.administrator"
+														)}
 													</>
 												) : (
 													<>
 														<UserIcon className="h-3 w-3 mr-1" />{" "}
-														Корисник
+														{t("users.employee")}
 													</>
 												)}
 											</span>
@@ -198,7 +191,9 @@ export const UsersPage = () => {
 										<td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
 											{new Date(
 												user.createdAt
-											).toLocaleDateString("mk-MK")}
+											).toLocaleDateString(
+												t("common.locale")
+											)}
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
 											<button
@@ -231,8 +226,8 @@ export const UsersPage = () => {
 							<div className="px-6 py-4 border-b border-slate-200">
 								<h3 className="text-lg font-semibold text-slate-800">
 									{selectedUser
-										? "Уреди Корисник"
-										: "Нов Корисник"}
+										? t("users.editUser")
+										: t("users.newUser")}
 								</h3>
 							</div>
 
@@ -243,7 +238,7 @@ export const UsersPage = () => {
 							>
 								<div>
 									<label className="block text-sm font-medium text-slate-700 mb-2">
-										Корисничко име *
+										{t("users.username")} *
 									</label>
 									<input
 										type="text"
@@ -256,15 +251,17 @@ export const UsersPage = () => {
 											})
 										}
 										className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent"
-										placeholder="Внесете корисничко име"
+										placeholder={t(
+											"users.usernamePlaceholder"
+										)}
 									/>
 								</div>
 
 								<div>
 									<label className="block text-sm font-medium text-slate-700 mb-2">
-										Лозинка{" "}
+										{t("users.password")}{" "}
 										{selectedUser &&
-											"(оставете празно за да не ја промените)"}
+											t("users.passwordHint")}
 									</label>
 									<input
 										type="password"
@@ -277,14 +274,16 @@ export const UsersPage = () => {
 											})
 										}
 										className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent"
-										placeholder="Внесете лозинка"
+										placeholder={t(
+											"users.passwordPlaceholder"
+										)}
 										minLength={4}
 									/>
 								</div>
 
 								<div>
 									<label className="block text-sm font-medium text-slate-700 mb-2">
-										Улога *
+										{t("users.role")} *
 									</label>
 									<select
 										required
@@ -297,9 +296,11 @@ export const UsersPage = () => {
 										}
 										className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent"
 									>
-										<option value="user">Вработен</option>
+										<option value="user">
+											{t("users.employee")}
+										</option>
 										<option value="admin">
-											Администратор
+											{t("users.administrator")}
 										</option>
 									</select>
 								</div>
@@ -314,7 +315,7 @@ export const UsersPage = () => {
 										}}
 										className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 min-h-[44px]"
 									>
-										Откажи
+										{t("common.cancel")}
 									</button>
 									<button
 										type="submit"
@@ -326,10 +327,10 @@ export const UsersPage = () => {
 									>
 										{createMutation.isLoading ||
 										updateMutation.isLoading
-											? "Зачувување..."
+											? `${t("common.save")}...`
 											: selectedUser
-											? "Зачувај"
-											: "Додади"}
+											? t("common.save")
+											: t("common.add")}
 									</button>
 								</div>
 							</form>

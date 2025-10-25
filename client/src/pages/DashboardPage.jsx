@@ -13,8 +13,10 @@ axios.defaults.withCredentials = true
 import { getBookings, getEmployees } from "../constants"
 import { useQuery } from "@tanstack/react-query"
 import BookingDetailsModal from "../components/BookingDetailsModal"
+import { useTranslation } from "react-i18next"
 
 export const DashboardPage = () => {
+	const { t } = useTranslation()
 	const [selectedDate, setSelectedDate] = useState(new Date())
 	const [showBookingModal, setShowBookingModal] = useState(false)
 	const [selectedDateTime, setSelectedDateTime] = useState(null)
@@ -26,43 +28,40 @@ export const DashboardPage = () => {
 	const [viewMode, setViewMode] = useState("month")
 	const [selectedEmployeeId, setSelectedEmployeeId] = useState(null)
 
-	const mkMonthNames = [
-		"Јануари",
-		"Февруари",
-		"Март",
-		"Април",
-		"Мај",
-		"Јуни",
-		"Јули",
-		"Август",
-		"Септември",
-		"Октомври",
-		"Ноември",
-		"Декември",
-	]
-	const mkWeekdayNames = [
-		"Недела", // Sunday
-		"Понеделник", // Monday
-		"Вторник", // Tuesday
-		"Среда", // Wednesday
-		"Четврток", // Thursday
-		"Петок", // Friday
-		"Сабота", // Saturday
-	]
 	const formatDateMK = (date, options = {}) => {
 		const day = date.getDate()
-		const month = mkMonthNames[date.getMonth()]
+		const monthKeys = [
+			"january",
+			"february",
+			"march",
+			"april",
+			"may",
+			"june",
+			"july",
+			"august",
+			"september",
+			"october",
+			"november",
+			"december",
+		]
+		const weekdayKeys = [
+			"sunday",
+			"monday",
+			"tuesday",
+			"wednesday",
+			"thursday",
+			"friday",
+			"saturday",
+		]
+		const month = t(`months.${monthKeys[date.getMonth()]}`)
 		const year = date.getFullYear()
-		const weekday = mkWeekdayNames[date.getDay()]
+		const weekday = t(`weekdays.${weekdayKeys[date.getDay()]}`)
 
 		if (options.full) {
-			// Full format: "Понеделник, 21 Јануари 2025"
 			return `${weekday}, ${day} ${month} ${year}`
 		} else if (options.weekday) {
-			// With weekday: "Понеделник, 21 Јануари 2025"
 			return `${weekday}, ${day} ${month} ${year}`
 		} else {
-			// Simple format: "21 Јануари 2025"
 			return `${day} ${month} ${year}`
 		}
 	}
@@ -251,17 +250,17 @@ export const DashboardPage = () => {
 					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 						<div>
 							<h1 className="text-2xl sm:text-3xl font-bold text-slate-800 font-poppins">
-								Табло
+								{t("dashboard.title")}
 							</h1>
 							<p className="text-slate-600 mt-1 text-sm sm:text-base">
-								Управување со вашите термини и резервации
+								{t("dashboard.subtitle")}
 							</p>
 							<button
 								onClick={() => setViewMode("month")}
 								className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors touch-manipulation min-h-[44px] mt-2"
 							>
 								<Calendar className="h-5 w-5 mr-2" />
-								Месечен приказ
+								{t("dashboard.monthView")}
 							</button>
 						</div>
 					</div>
@@ -290,11 +289,24 @@ export const DashboardPage = () => {
 											<ChevronLeft className="h-5 w-5 text-slate-500" />
 										</button>
 										<h2 className="text-lg sm:text-xl font-semibold text-slate-800 font-poppins">
-											{
-												mkMonthNames[
-													selectedDate.getMonth()
-												]
-											}{" "}
+											{t(
+												`months.${
+													[
+														"january",
+														"february",
+														"march",
+														"april",
+														"may",
+														"june",
+														"july",
+														"august",
+														"september",
+														"october",
+														"november",
+														"december",
+													][selectedDate.getMonth()]
+												}`
+											)}{" "}
 											{selectedDate.getFullYear()}
 										</h2>
 										<button
@@ -317,19 +329,19 @@ export const DashboardPage = () => {
 									{/* Weekday headers */}
 									<div className="grid grid-cols-7 border-b border-slate-200 text-center font-medium text-slate-500 mb-2">
 										{[
-											"Пон",
-											"Вто",
-											"Сре",
-											"Чет",
-											"Пет",
-											"Саб",
-											"Нед",
+											"mon",
+											"tue",
+											"wed",
+											"thu",
+											"fri",
+											"sat",
+											"sun",
 										].map((d) => (
 											<div
 												key={d}
 												className="p-2 sm:p-3 border border-slate-200 bg-slate-50"
 											>
-												{d}
+												{t(`weekdays.${d}`)}
 											</div>
 										))}
 									</div>
@@ -425,7 +437,8 @@ export const DashboardPage = () => {
 						<>
 							<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 sm:px-6 py-4 border-b border-slate-200">
 								<h2 className="text-lg sm:text-xl font-semibold text-slate-800 font-poppins truncate">
-									Недела на {formatDateMK(weekDays[0])}
+									{t("dashboard.weekOf")}{" "}
+									{formatDateMK(weekDays[0])}
 								</h2>
 								<div className="flex items-center justify-center sm:justify-end gap-2">
 									<button
@@ -440,7 +453,7 @@ export const DashboardPage = () => {
 										}
 										className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors touch-manipulation min-h-[44px]"
 									>
-										Денес
+										{t("common.today")}
 									</button>
 									<button
 										onClick={() => navigateWeek(1)}
@@ -457,7 +470,7 @@ export const DashboardPage = () => {
 									{/* Day Headers */}
 									<div className="grid grid-cols-8 border-b border-slate-200">
 										<div className="p-3 sm:p-4 text-xs sm:text-sm font-medium text-slate-500 sticky left-0 bg-white z-10 border-r border-slate-200">
-											Час
+											{t("dashboard.hour")}
 										</div>
 										{weekDays.map((day, index) => (
 											<div
@@ -466,7 +479,7 @@ export const DashboardPage = () => {
 											>
 												<div className="text-xs sm:text-sm font-medium text-slate-500">
 													{day.toLocaleDateString(
-														"mk-MK",
+														t('common.locale'),
 														{
 															weekday: "short",
 														}
@@ -559,7 +572,9 @@ export const DashboardPage = () => {
 																							}
 																						</div>
 																						<div className="text-blue-500 text-xs">
-																							До{" "}
+																							{t(
+																								"common.until"
+																							)}{" "}
 																							{String(
 																								new Date(
 																									booking.endTime
@@ -578,8 +593,6 @@ export const DashboardPage = () => {
 																								2,
 																								"0"
 																							)}
-
-																							ч
 																						</div>
 																					</div>
 																				)
@@ -597,8 +610,9 @@ export const DashboardPage = () => {
 																				className="w-full mt-1 h-6 sm:h-8 flex items-center justify-center bg-slate-50 text-slate-500 hover:bg-slate-100 rounded text-xs transition-colors"
 																			>
 																				<Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-																				Нов
-																				термин
+																				{t(
+																					"dashboard.newAppointment"
+																				)}
 																			</button>
 																		</div>{" "}
 																	</div>
@@ -647,7 +661,7 @@ export const DashboardPage = () => {
 										}
 										className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors touch-manipulation min-h-[44px]"
 									>
-										Денес
+										{t("common.today")}
 									</button>
 									<button
 										onClick={() => navigateDay(1)}
@@ -662,7 +676,7 @@ export const DashboardPage = () => {
 							{allEmployees.length > 1 ? (
 								<div className="sm:hidden px-4 py-3 border-b border-slate-200 bg-slate-50">
 									<label className="block text-sm font-medium text-slate-700 mb-3">
-										Филтрирај по вработен
+										{t("dashboard.filterByEmployee")}
 									</label>
 									<div className="grid grid-cols-2 gap-2">
 										{/* "All Employees" box */}
@@ -676,7 +690,7 @@ export const DashboardPage = () => {
 													: "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
 											}`}
 										>
-											Сите вработени
+											{t("dashboard.allEmployees")}
 										</button>
 
 										{/* Individual employee boxes */}
@@ -723,7 +737,7 @@ export const DashboardPage = () => {
 										}}
 									>
 										<div className="p-3 text-sm font-medium text-slate-500 border-r border-slate-200 sticky left-0 bg-white z-30">
-											Час
+											{t("dashboard.hour")}
 										</div>
 										{allEmployees.map((emp) => (
 											<div
@@ -993,7 +1007,9 @@ export const DashboardPage = () => {
 																className="w-full py-3 bg-slate-50 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-medium transition-colors flex items-center justify-center"
 															>
 																<Plus className="h-4 w-4 mr-2" />
-																Додади термин
+																{t(
+																	"dashboard.addAppointment"
+																)}
 															</button>
 														</div>
 													) : (
@@ -1009,7 +1025,9 @@ export const DashboardPage = () => {
 														>
 															<Plus className="h-5 w-5 mr-2" />
 															<span className="text-sm">
-																Слободен термин
+																{t(
+																	"dashboard.freeSlot"
+																)}
 															</span>
 														</button>
 													)}
@@ -1033,7 +1051,7 @@ export const DashboardPage = () => {
 						</div>
 						<div className="ml-3 sm:ml-4 min-w-0">
 							<p className="text-xs sm:text-sm font-medium text-slate-500 truncate">
-								Термини Денес
+								{t("dashboard.appointmentsToday")}
 							</p>
 							<p className="text-xl sm:text-2xl font-bold text-slate-800">
 								{
@@ -1059,7 +1077,7 @@ export const DashboardPage = () => {
 						</div>
 						<div className="ml-3 sm:ml-4 min-w-0">
 							<p className="text-xs sm:text-sm font-medium text-slate-500 truncate">
-								Овој месец
+								{t("dashboard.thisMonth")}
 							</p>
 							<p className="text-xl sm:text-2xl font-bold text-slate-800">
 								{bookings.length > 0
@@ -1071,7 +1089,7 @@ export const DashboardPage = () => {
 											)
 											.toFixed(2)
 									: 0}{" "}
-								ден.
+								{t("common.currency")}
 							</p>
 						</div>
 					</div>
@@ -1082,9 +1100,9 @@ export const DashboardPage = () => {
 				onChange={(e) => setViewMode(e.target.value)}
 				className="px-3 py-2 border border-slate-300 rounded-lg"
 			>
-				<option value="day">Дневен приказ</option>
-				<option value="week">Неделен приказ</option>
-				<option value="month">Месечен приказ</option>
+				<option value="day">{t("dashboard.dayView")}</option>
+				<option value="week">{t("dashboard.weekView")}</option>
+				<option value="month">{t("dashboard.monthView")}</option>
 			</select>
 
 			{/* Booking Modal */}

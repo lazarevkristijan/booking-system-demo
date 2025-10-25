@@ -2,12 +2,14 @@ import { useState } from "react"
 import { Navigate } from "react-router-dom"
 import { Eye, EyeOff, LogIn } from "lucide-react"
 import axios from "axios"
+import { useTranslation } from "react-i18next"
 axios.defaults.withCredentials = true
 import { SERVER_API } from "../constants"
 import { useQueryClient } from "@tanstack/react-query"
+import { LanguageSwitcher } from "../components/LanguageSwitcher"
 
-// LoginPage component definition
 const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
+	const { t } = useTranslation()
 	const [username, setUsername] = useState("")
 	const [password, setPassword] = useState("")
 	const [showPassword, setShowPassword] = useState(false)
@@ -34,7 +36,7 @@ const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
 				.catch((e) => setError(e.response.data.error))
 		} catch (e) {
 			console.error(e)
-			setError("Погрешно корисничко име или лозинка")
+			setError(t("auth.invalidCredentials"))
 		} finally {
 			setLoading(false)
 		}
@@ -52,12 +54,15 @@ const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
 	return (
 		<div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
 			<div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
+				<div className="flex justify-end mb-4">
+					<LanguageSwitcher />
+				</div>
 				<div className="mb-8 text-center">
 					<h1 className="text-2xl font-bold text-slate-800 font-poppins mb-2">
-						Најава во системот
+						{t("auth.loginTitle")}
 					</h1>
 					<p className="text-slate-600 text-sm">
-						Внесете ги вашите податоци за пристап
+						{t("auth.loginSubtitle")}
 					</p>
 				</div>
 				<form
@@ -66,7 +71,7 @@ const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
 				>
 					<div>
 						<label className="block text-sm font-medium text-slate-700 mb-2">
-							Корисничко име
+							{t("auth.username")}
 						</label>
 						<input
 							type="text"
@@ -74,12 +79,12 @@ const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
 							value={username}
 							onChange={(e) => setUsername(e.target.value)}
 							className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent"
-							placeholder="darko"
+							placeholder="Dani"
 						/>
 					</div>
 					<div>
 						<label className="block text-sm font-medium text-slate-700 mb-2">
-							Лозинка
+							{t("auth.password")}
 						</label>
 						<div className="relative">
 							<input
@@ -98,8 +103,8 @@ const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
 								onClick={() => setShowPassword((v) => !v)}
 								aria-label={
 									showPassword
-										? "Сокриј ја лозинката"
-										: "Прикажи ја лозинката"
+										? t("auth.hidePassword") // ✅
+										: t("auth.showPassword") // ✅
 								}
 							>
 								{showPassword ? (
@@ -121,7 +126,7 @@ const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
 						className="w-full flex items-center justify-center px-6 py-3 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors min-h-[44px] disabled:opacity-50"
 					>
 						<LogIn className="h-5 w-5 mr-2" />
-						{loading ? "Најавување..." : "Најава"}
+						{loading ? t("auth.loggingIn") : t("auth.login")}{" "}
 					</button>
 				</form>
 				<div className="mt-8 text-center text-xs text-slate-400">
@@ -132,5 +137,4 @@ const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
 	)
 }
 
-// Export as named export for router compatibility
 export const LoginPage = LoginPageComponent

@@ -31,7 +31,7 @@ router.get("/", async (req, res) => {
 		res.json(services)
 	} catch (error) {
 		console.error("Error fetching services:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 
@@ -44,13 +44,15 @@ router.get("/:id", async (req, res) => {
 		})
 
 		if (!service) {
-			return res.status(404).json({ error: "Услугата не е пронајдена" })
+			return res
+				.status(404)
+				.json({ error: req.t("errors.serviceNotFound") })
 		}
 
 		res.json(service)
 	} catch (error) {
 		console.error("Error fetching service:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 
@@ -61,23 +63,23 @@ router.post("/", async (req, res) => {
 		if (!name || name.trim() === "") {
 			return res
 				.status(400)
-				.json({ error: "Полето за име е задолжително" })
+				.json({ error: req.t("validation.nameRequired") })
 		}
 		if (duration == null || isNaN(duration) || duration <= 0) {
 			return res.status(400).json({
-				error: "Времетраењето треба да биде број во минути",
+				error: req.t("validation.durationInvalid"),
 			})
 		}
 		if (price == null || isNaN(price) || price < 0) {
 			return res
 				.status(400)
-				.json({ error: "Цената треба да биде број во денари" })
+				.json({ error: req.t("validation.priceInvalid") })
 		}
 
 		const organizationId = req.organizationId // From auth middleware
 		if (!organizationId) {
 			return res.status(400).json({
-				error: "Идентификатор на организација е задолжителен",
+				error: req.t("validation.organizationRequired"),
 			})
 		}
 		const service = new Service({
@@ -91,17 +93,23 @@ router.post("/", async (req, res) => {
 
 		try {
 			await logAction(req, {
-				action: "Креирање",
-				entityType: "услуга",
+				action: req.t("actions.create"),
+				entityType: req.t("entities.service"),
 				entityId: service._id,
-				details: `услуга: ${service.name}, цена: ${service.price}ден, време: ${service.duration}мин`,
+				details: `${req.t("entities.service")}: ${
+					service.name
+				}, ${req.t("entities.price")}: ${service.price}${req.t(
+					"common.currency"
+				)}, ${req.t("entities.duration")}: ${service.duration}${req.t(
+					"common.minutes"
+				)}`,
 			})
 		} catch {}
 
 		res.status(201).json(service)
 	} catch (error) {
 		console.error("Error creating service:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 
@@ -114,24 +122,26 @@ router.put("/:id", async (req, res) => {
 		// Validation
 		if (!name || name.trim() === "" || isHidden === undefined) {
 			return res.status(400).json({
-				error: "Полињата за име и за активност на услугата се задолжителни",
+				error: req.t("validation.serviceFieldsRequired"),
 			})
 		}
 		if (duration == null || isNaN(duration) || duration <= 0) {
 			return res.status(400).json({
-				error: "Времетраењето треба да биде број и најмалку 1 мин.",
+				error: req.t("validation.durationInvalid"),
 			})
 		}
 		if (price == null || isNaN(price) || price < 0) {
 			return res
 				.status(400)
-				.json({ error: "Цената треба да биде број и најмалку 1 ден." })
+				.json({ error: req.t("validation.priceInvalid") })
 		}
 
 		const prevService = await Service.findById(id)
 		// SECURITY: Verify service belongs to user's organization
 		if (!prevService) {
-			return res.status(404).json({ error: "Услугата не е пронајдена" })
+			return res
+				.status(404)
+				.json({ error: req.t("errors.serviceNotFound") })
 		}
 		if (
 			prevService.organizationId.toString() !==
@@ -139,7 +149,7 @@ router.put("/:id", async (req, res) => {
 		) {
 			return res
 				.status(403)
-				.json({ error: "Немате пристап до оваа услуга" })
+				.json({ error: req.t("errors.noAccessToService") })
 		}
 
 		const service = await Service.findByIdAndUpdate(
@@ -153,22 +163,30 @@ router.put("/:id", async (req, res) => {
 		)
 
 		if (!service) {
-			return res.status(404).json({ error: "Услугата не е пронајдена" })
+			return res
+				.status(404)
+				.json({ error: req.t("errors.serviceNotFound") })
 		}
 
 		try {
 			await logAction(req, {
-				action: "Уредување",
-				entityType: "услуга",
+				action: req.t("actions.update"),
+				entityType: req.t("entities.service"),
 				entityId: service._id,
-				details: `име: ${prevService.name}->${service.name}, цена: ${prevService.price}->${service.price}ден, време: ${prevService.duration}->${service.duration}мин`,
+				details: `${req.t("entities.name")}: ${prevService.name}->${
+					service.name
+				}, ${req.t("entities.price")}: ${prevService.price}->${
+					service.price
+				}${req.t("common.currency")}, ${req.t("entities.duration")}: ${
+					prevService.duration
+				}->${service.duration}${req.t("common.minutes")}`,
 			})
 		} catch {}
 
 		res.json(service)
 	} catch (error) {
 		console.error("Error updating service:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 
@@ -183,7 +201,9 @@ router.delete("/:id", async (req, res) => {
 		})
 
 		if (!service) {
-			return res.status(404).json({ error: "Услугата не е пронајдена" })
+			return res
+				.status(404)
+				.json({ error: req.t("errors.serviceNotFound") })
 		}
 
 		// Check if service has active bookings
@@ -194,7 +214,7 @@ router.delete("/:id", async (req, res) => {
 
 		if (activeBookings > 0) {
 			return res.status(400).json({
-				error: "Не може да се избрише услуга со претстојни резервации",
+				error: req.t("errors.serviceHasBookings"),
 			})
 		}
 
@@ -202,17 +222,17 @@ router.delete("/:id", async (req, res) => {
 
 		try {
 			await logAction(req, {
-				action: "Бришење",
-				entityType: "услуга",
+				action: req.t("actions.delete"),
+				entityType: req.t("entities.service"),
 				entityId: id,
 				details: service.name,
 			})
 		} catch {}
 
-		res.json({ message: "Услугата е избришана" })
+		res.json({ message: req.t("success.serviceDeleted") })
 	} catch (error) {
 		console.error("Error deleting service:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 
@@ -228,22 +248,24 @@ router.patch("/:id/restore", async (req, res) => {
 		)
 
 		if (!service) {
-			return res.status(404).json({ error: "Услугата не е пронајдена" })
+			return res
+				.status(404)
+				.json({ error: req.t("errors.serviceNotFound") })
 		}
 
 		try {
 			await logAction(req, {
-				action: "Враќање",
-				entityType: "услуга",
+				action: req.t("actions.restore"),
+				entityType: req.t("entities.service"),
 				entityId: id,
 				details: service.name,
 			})
 		} catch {}
 
-		res.json({ message: "Услугата е вратена: ", service })
+		res.json({ message: req.t("success.serviceRestored"), service })
 	} catch (error) {
 		console.error("Error restoring service:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 

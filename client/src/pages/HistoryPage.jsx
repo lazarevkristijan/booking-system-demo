@@ -2,8 +2,10 @@ import { useEffect, useState } from "react"
 import { CrudTable } from "../components/CrudTable"
 import { getHistory } from "../constants"
 import { HistoryDetailsModal } from "../components/HistoryDetailsModal"
+import { useTranslation } from "react-i18next"
 
 export const HistoryPage = () => {
+	const { t } = useTranslation()
 	const [data, setData] = useState([])
 	const [pageInfo, setPageInfo] = useState({
 		page: 1,
@@ -49,61 +51,34 @@ export const HistoryPage = () => {
 	}, [])
 
 	const columns = [
-		{ key: "createdAt", label: "Кога", type: "datetime" },
-		{ key: "username", label: "Корисник" },
-		{ key: "action", label: "Акција" },
-		{ key: "entityType", label: "Тип" },
+		{ key: "createdAt", label: t("history.when"), type: "datetime" },
+		{ key: "username", label: t("history.user") },
+		{ key: "action", label: t("history.action") },
+		{ key: "entityType", label: t("history.type") },
 		// { key: "entityId", label: "ID" },
-		{ key: "details", label: "Детали" },
+		{ key: "details", label: t("history.details") },
 	]
 
 	return (
 		<div className="p-4 sm:p-6">
 			<CrudTable
-				title={loading ? "Историја (вчитување...)" : "Историја"}
+				title={
+					loading
+						? `${t("history.title")} (${t("common.loading")})`
+						: t("history.title")
+				}
 				data={data}
 				columns={columns}
 				onAdd={() => load(pageInfo.page)} // reuse as refresh button
 				onView={handleViewDetails}
-				addButtonText="Освежи"
-				searchPlaceholder="Пребарување во историја..."
+				addButtonText={t("history.refresh")}
+				searchPlaceholder={t("history.searchPlaceholder")}
 			/>
 			<HistoryDetailsModal
 				isOpen={isModalOpen}
 				onClose={closeModal}
 				historyItem={selectedHistoryItem}
 			/>
-			{/* Simple pager
-			<div className="flex items-center justify-end gap-2 mt-4">
-				<button
-					onClick={() => load(Math.max(1, pageInfo.page - 1))}
-					className="px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50"
-					disabled={pageInfo.page <= 1}
-				>
-					Назад
-				</button>
-				<span className="text-sm text-slate-600">
-					Стр. {pageInfo.page} от{" "}
-					{Math.max(1, Math.ceil(pageInfo.total / pageInfo.limit))}
-				</span>
-				<button
-					onClick={() =>
-						load(
-							pageInfo.page + 1 >
-								Math.ceil(pageInfo.total / pageInfo.limit)
-								? pageInfo.page
-								: pageInfo.page + 1
-						)
-					}
-					className="px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50"
-					disabled={
-						pageInfo.page >=
-						Math.ceil(pageInfo.total / pageInfo.limit)
-					}
-				>
-					Напред
-				</button>
-			</div> */}
 		</div>
 	)
 }

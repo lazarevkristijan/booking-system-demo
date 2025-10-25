@@ -1,4 +1,4 @@
-import {useState } from "react"
+import { useState } from "react"
 import { CrudTable } from "../components/CrudTable"
 import { X, Calendar } from "lucide-react"
 import axios from "axios"
@@ -12,8 +12,10 @@ import {
 	postNewClientFromPage,
 } from "../constants"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 
 export const ClientsPage = () => {
+	const { t } = useTranslation()
 	const queryClient = useQueryClient()
 
 	// Pagination and search state
@@ -44,13 +46,12 @@ export const ClientsPage = () => {
 		queryKey: ["all_booking_history"],
 		queryFn: getClientsBookingHystory,
 		staleTime: 1000 * 60 * 5,
-		enabled: showHistoryModal,
 	})
 
 	const columns = [
-		{ key: "full_name", label: "Име и презиме", type: "text" },
-		{ key: "phone", label: "Телефон", type: "phone" },
-		{ key: "notes", label: "Белешки", type: "text" },
+		{ key: "full_name", label: t("clients.name"), type: "text" },
+		{ key: "phone", label: t("clients.phone"), type: "phone" },
+		{ key: "notes", label: t("clients.notes"), type: "text" },
 	]
 
 	const handleAdd = () => {
@@ -73,7 +74,7 @@ export const ClientsPage = () => {
 	const handleDelete = async (client) => {
 		if (
 			window.confirm(
-				`Дали сте сигурни дека сакате да го избришете ${client.full_name}?`
+				`${t("clients.deleteConfirm")} - ${client.full_name}`
 			)
 		) {
 			await deleteClientFromClientsPage(client, clients, () => {
@@ -114,26 +115,25 @@ export const ClientsPage = () => {
 		return history.reduce((total, booking) => total + booking.price, 0)
 	}
 
-	const mkMonthNames = [
-		"Јануари",
-		"Февруари",
-		"Март",
-		"Април",
-		"Мај",
-		"Јуни",
-		"Јули",
-		"Август",
-		"Септември",
-		"Октомври",
-		"Ноември",
-		"Декември",
-	]
-
-	// Format date in Macedonian
+	// Format date with i18n
 	const formatDateTimeMK = (dateString) => {
 		const date = new Date(dateString)
 		const day = date.getDate()
-		const month = mkMonthNames[date.getMonth()]
+		const monthKey = [
+			"january",
+			"february",
+			"march",
+			"april",
+			"may",
+			"june",
+			"july",
+			"august",
+			"september",
+			"october",
+			"november",
+			"december",
+		][date.getMonth()]
+		const month = t(`months.${monthKey}`)
 		const year = date.getFullYear()
 		const hours = String(date.getHours()).padStart(2, "0")
 		const minutes = String(date.getMinutes()).padStart(2, "0")
@@ -160,24 +160,24 @@ export const ClientsPage = () => {
 				{/* Header */}
 				<div className="mb-6">
 					<h1 className="text-2xl sm:text-3xl font-bold text-slate-800 font-poppins">
-						Клиенти
+						{t("clients.title")}
 					</h1>
 					<p className="text-slate-600 mt-1 text-sm sm:text-base">
-						Управување со вашите клиенти
+						{t("clients.subtitle")}
 					</p>
 				</div>
 
 				{/* CrudTable with server-side pagination */}
 				<CrudTable
-					title="Сите Клиенти"
+					title={t("clients.tableTitle")}
 					data={clients}
 					columns={columns}
 					onAdd={handleAdd}
 					onEdit={handleEdit}
 					onDelete={handleDelete}
 					onView={handleViewHistory}
-					searchPlaceholder="Пребарај по име, телефон или белешки..."
-					addButtonText="Додади Клиент"
+					searchPlaceholder={t("clients.searchPlaceholder")}
+					addButtonText={t("clients.addClient")}
 					// Server-side pagination props
 					serverSidePagination={true}
 					totalItems={pagination.total}
@@ -200,8 +200,8 @@ export const ClientsPage = () => {
 							<div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-200">
 								<h3 className="text-base sm:text-lg font-semibold text-slate-800 font-poppins truncate">
 									{selectedClient
-										? "Уреди Клиент"
-										: "Додади Клиент"}
+										? t("clients.editClient")
+										: t("clients.addClient")}
 								</h3>
 								<button
 									onClick={() => setShowModal(false)}
@@ -219,7 +219,7 @@ export const ClientsPage = () => {
 							>
 								<div>
 									<label className="block text-sm font-medium text-slate-700 mb-2">
-										Име и Презиме *
+										{t("clients.fullNameLabel")}
 									</label>
 									<input
 										type="text"
@@ -232,13 +232,15 @@ export const ClientsPage = () => {
 											})
 										}
 										className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent"
-										placeholder="Внесете име и презиме"
+										placeholder={t(
+											"clients.fullNamePlaceholder"
+										)}
 									/>
 								</div>
 
 								<div>
 									<label className="block text-sm font-medium text-slate-700 mb-2">
-										Телефонски број *
+										{t("clients.phoneLabel")}
 									</label>
 									<input
 										type="tel"
@@ -251,13 +253,15 @@ export const ClientsPage = () => {
 											})
 										}
 										className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent"
-										placeholder="Внесете телефонски број"
+										placeholder={t(
+											"clients.phonePlaceholder"
+										)}
 									/>
 								</div>
 
 								<div>
 									<label className="block text-sm font-medium text-slate-700 mb-2">
-										Белешки
+										{t("clients.notesLabel")}
 									</label>
 									<textarea
 										value={formData.notes}
@@ -269,7 +273,9 @@ export const ClientsPage = () => {
 										}
 										maxLength={100}
 										className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent resize-none"
-										placeholder="Внесете белешки (опционално)"
+										placeholder={t(
+											"clients.notesPlaceholder"
+										)}
 										rows={3}
 									/>
 									<p className="text-right text-xs text-slate-500 mt-1">
@@ -292,13 +298,15 @@ export const ClientsPage = () => {
 										}}
 										className="px-4 py-3 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 min-h-[44px]"
 									>
-										Откажи
+										{t("common.cancel")}
 									</button>
 									<button
 										type="submit"
 										className="px-4 py-3 text-sm font-medium text-white bg-slate-800 rounded-lg hover:bg-slate-700 min-h-[44px]"
 									>
-										{selectedClient ? "Зачувај" : "Додади"}
+										{selectedClient
+											? t("common.save")
+											: t("common.add")}
 									</button>
 								</div>
 							</form>
@@ -318,7 +326,7 @@ export const ClientsPage = () => {
 							<div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-200">
 								<div className="flex-1 min-w-0">
 									<h3 className="text-base sm:text-lg font-semibold text-slate-800 font-poppins truncate">
-										Историја на Резервации
+										{t("clients.bookingHistory")}
 									</h3>
 									<p className="text-sm text-slate-600 mt-1 truncate">
 										{selectedClient.full_name} •{" "}
@@ -353,8 +361,7 @@ export const ClientsPage = () => {
 											<div className="text-center py-12">
 												<Calendar className="h-12 w-12 text-slate-300 mx-auto mb-4" />
 												<p className="text-slate-500">
-													Нема резервации за овој
-													клиент
+													{t("clients.noBookings")}
 												</p>
 											</div>
 										)
@@ -364,13 +371,15 @@ export const ClientsPage = () => {
 										<>
 											<div className="mb-4 p-4 bg-slate-50 rounded-lg">
 												<div className="text-sm font-medium text-slate-700">
-													Вкупно потрошено:
+													{t("clients.totalSpent")}
 												</div>
 												<div className="text-2xl font-bold text-slate-800">
-													{totalSpent.toFixed(2)} ден.
+													{totalSpent.toFixed(2)}{" "}
+													{t("common.currency")}
 												</div>
 												<div className="text-sm text-slate-600 mt-1">
-													{history.length} резервации
+													{history.length}{" "}
+													{t("clients.bookingsCount")}
 												</div>
 											</div>
 
@@ -396,7 +405,10 @@ export const ClientsPage = () => {
 														<div className="text-sm text-slate-600">
 															<div className="mb-1">
 																<span className="font-medium">
-																	Услуги:
+																	{t(
+																		"bookings.services"
+																	)}
+																	:
 																</span>{" "}
 																{booking.services
 																	.map(
@@ -407,7 +419,9 @@ export const ClientsPage = () => {
 															</div>
 															<div>
 																<span className="font-medium">
-																	Служител:
+																	{t(
+																		"clients.employee"
+																	)}
 																</span>{" "}
 																{
 																	booking
@@ -442,7 +456,7 @@ export const ClientsPage = () => {
 									}}
 									className="px-4 py-3 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 min-h-[44px]"
 								>
-									Затвори
+									{t("common.close")}
 								</button>
 							</div>
 						</div>

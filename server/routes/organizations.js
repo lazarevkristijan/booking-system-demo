@@ -6,9 +6,7 @@ const User = require("../models/User.js")
 // Middleware for superadmin only
 const requireSuperAdmin = (req, res, next) => {
 	if (req.userRole !== "superadmin") {
-		return res
-			.status(403)
-			.json({ error: "Само суперадминистратори имаат пристап" })
+		return res.status(403).json({ error: req.t("errors.superadminOnly") })
 	}
 	next()
 }
@@ -34,7 +32,7 @@ router.get("/", requireSuperAdmin, async (req, res) => {
 		res.json(orgsWithCounts)
 	} catch (error) {
 		console.error("Error fetching organizations:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 
@@ -46,13 +44,13 @@ router.get("/:id", requireSuperAdmin, async (req, res) => {
 		if (!organization) {
 			return res
 				.status(404)
-				.json({ error: "Организацијата не е пронајдена" })
+				.json({ error: req.t("errors.organizationNotFound") })
 		}
 
 		res.json(organization)
 	} catch (error) {
 		console.error("Error fetching organization:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 
@@ -62,7 +60,9 @@ router.post("/", requireSuperAdmin, async (req, res) => {
 		const { name, slug } = req.body
 
 		if (!name || !slug) {
-			return res.status(400).json({ error: "Име и код се задолжителни" })
+			return res
+				.status(400)
+				.json({ error: req.t("errors.nameAndSlugRequired") })
 		}
 
 		// Check if slug already exists
@@ -72,7 +72,7 @@ router.post("/", requireSuperAdmin, async (req, res) => {
 		if (existing) {
 			return res
 				.status(400)
-				.json({ error: "Организација со овој код веќе постои" })
+				.json({ error: req.t("errors.organizationSlugExists") })
 		}
 
 		const organization = new Organization({
@@ -85,7 +85,7 @@ router.post("/", requireSuperAdmin, async (req, res) => {
 		res.status(201).json(organization)
 	} catch (error) {
 		console.error("Error creating organization:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 
@@ -96,7 +96,9 @@ router.put("/:id", requireSuperAdmin, async (req, res) => {
 		const { name, slug, isActive } = req.body
 
 		if (!name || !slug) {
-			return res.status(400).json({ error: "Име и код се задолжителни" })
+			return res
+				.status(400)
+				.json({ error: req.t("errors.nameAndSlugRequired") })
 		}
 
 		// Check if slug is taken by another org
@@ -107,7 +109,7 @@ router.put("/:id", requireSuperAdmin, async (req, res) => {
 		if (existing) {
 			return res
 				.status(400)
-				.json({ error: "Организација со овој код веќе постои" })
+				.json({ error: req.t("errors.organizationSlugExists") })
 		}
 
 		const organization = await Organization.findByIdAndUpdate(
@@ -123,13 +125,13 @@ router.put("/:id", requireSuperAdmin, async (req, res) => {
 		if (!organization) {
 			return res
 				.status(404)
-				.json({ error: "Организацијата не е пронајдена" })
+				.json({ error: req.t("errors.organizationNotFound") })
 		}
 
 		res.json(organization)
 	} catch (error) {
 		console.error("Error updating organization:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 
@@ -142,7 +144,9 @@ router.delete("/:id", requireSuperAdmin, async (req, res) => {
 		const userCount = await User.countDocuments({ organizationId: id })
 		if (userCount > 0) {
 			return res.status(400).json({
-				error: `Не може да се избрише организација со ${userCount} корисници`,
+				error: req.t("errors.organizationHasUsers", {
+					count: userCount,
+				}),
 			})
 		}
 
@@ -151,13 +155,13 @@ router.delete("/:id", requireSuperAdmin, async (req, res) => {
 		if (!organization) {
 			return res
 				.status(404)
-				.json({ error: "Организацијата не е пронајдена" })
+				.json({ error: req.t("errors.organizationNotFound") })
 		}
 
-		res.json({ message: "Организацијата е избришана" })
+		res.json({ message: req.t("success.organizationDeleted") })
 	} catch (error) {
 		console.error("Error deleting organization:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 

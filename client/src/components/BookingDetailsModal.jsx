@@ -9,6 +9,7 @@ import {
 	getSingleClientHistory,
 } from "../constants"
 import { useQuery } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 
 export const BookingDetailsModal = ({
 	isOpen,
@@ -16,6 +17,7 @@ export const BookingDetailsModal = ({
 	booking,
 	onDeleted,
 }) => {
+	const { t } = useTranslation()
 	const [showConfirm, setShowConfirm] = useState(false)
 	const { data: allHistory } = useQuery({
 		queryKey: ["all_booking_history"],
@@ -43,15 +45,15 @@ export const BookingDetailsModal = ({
 					<div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-200">
 						<div className="min-w-0 flex-1 mr-4">
 							<h3 className="text-base sm:text-lg font-semibold text-slate-800 font-poppins truncate">
-								Детали за резервацијата
+								{t("bookings.bookingDetails")}
 							</h3>
 							<p className="text-xs sm:text-sm text-slate-600 mt-1 truncate">
 								{new Date(booking.startTime).toLocaleString(
-									"mk-MK"
+									t("common.locale")
 								)}{" "}
 								-{" "}
 								{new Date(booking.endTime).toLocaleTimeString(
-									"mk-MK"
+									t("common.locale")
 								)}
 							</p>
 						</div>
@@ -69,25 +71,25 @@ export const BookingDetailsModal = ({
 						<div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
 							<p>
 								<span className="font-medium text-slate-700">
-									Клиент:{" "}
+									{t("clients.client")}:{" "}
 								</span>
 								{booking.client?.name || "—"}
 							</p>
 							<p>
 								<span className="font-medium text-slate-700">
-									Телефон:{" "}
+									{t("clients.phoneNumber")}:{" "}
 								</span>
 								{booking.client?.phone || "—"}
 							</p>
 							<p>
 								<span className="font-medium text-slate-700">
-									Вработен:{" "}
+									{t("bookings.employee")}:{" "}
 								</span>
 								{booking.employee?.name || "—"}
 							</p>
 							<p>
 								<span className="font-medium text-slate-700">
-									Услуги:{" "}
+									{t("bookings.services")}:{" "}
 								</span>
 								{booking.services
 									?.map((s) => s.name)
@@ -95,20 +97,21 @@ export const BookingDetailsModal = ({
 							</p>
 							<p>
 								<span className="font-medium text-slate-700">
-									Вкупно време:{" "}
+									{t("bookings.totalTime")}:{" "}
 								</span>
 								{booking.services
 									.map((s) => s.duration)
 									.reduce((accumulator, currentValue) => {
 										return accumulator + currentValue
 									}, 0)}{" "}
-								минути
+								{t("common.minutes")}
 							</p>
 							<p>
 								<span className="font-medium text-slate-700">
-									Цена:{" "}
+									{t("bookings.price")}:{" "}
 								</span>
-								{booking.price.toFixed(2)} ден.
+								{booking.price.toFixed(2)}{" "}
+								{t("common.currency")}
 							</p>
 							{booking.notes && (
 								<div>
@@ -116,7 +119,7 @@ export const BookingDetailsModal = ({
 										<StickyNote className="w-4 h-4 text-blue-500 mt-1" />
 										<div>
 											<p className="text-sm font-medium text-slate-700">
-												Белешка за резервацијата:
+												{t("bookings.bookingNote")}:
 											</p>
 											<p className="text-slate-700 text-sm">
 												{booking.notes}
@@ -131,7 +134,7 @@ export const BookingDetailsModal = ({
 									<User className="w-4 h-4 text-amber-500 mt-1" />
 									<div>
 										<p className="text-sm font-medium text-slate-700">
-											Белешка за клиентот:
+											{t("bookings.clientNote")}:
 										</p>
 										<p className="text-slate-700 text-sm">
 											{booking.client.notes}
@@ -146,13 +149,13 @@ export const BookingDetailsModal = ({
 						<>
 							<div className="px-4 sm:px-6 py-6 border-t border-slate-200 bg-slate-50">
 								<h4 className="text-sm sm:text-base font-semibold text-slate-800 mb-3">
-									Последни резервации
+									{t("bookings.recentBookings")}
 								</h4>
 								{clientHistory.filter(
 									(ch) => ch.id !== booking._id
 								).length === 0 ? (
 									<p className="text-slate-500 text-sm">
-										Нема претходни резервации
+										{t("bookings.noPreviousBookings")}
 									</p>
 								) : (
 									<div className="space-y-3">
@@ -180,7 +183,9 @@ export const BookingDetailsModal = ({
 															{new Date(
 																b.start_time
 															).toLocaleDateString(
-																"mk-MK"
+																t(
+																	"common.locale"
+																)
 															)}{" "}
 															•{" "}
 															{b.employee?.name ||
@@ -195,7 +200,7 @@ export const BookingDetailsModal = ({
 													</div>
 													<div className="text-right flex-shrink-0 text-sm font-semibold text-slate-800">
 														{b.price.toFixed(2)}{" "}
-														ден.
+														{t("common.currency")}
 													</div>
 												</div>
 											))}
@@ -219,7 +224,7 @@ export const BookingDetailsModal = ({
 							onClick={onClose}
 							className="px-4 py-3 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 touch-manipulation min-h-[44px]"
 						>
-							Затвори
+							{t("common.close")}
 						</button>
 						<button
 							onClick={() => setShowConfirm(true)}

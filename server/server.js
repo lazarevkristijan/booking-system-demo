@@ -5,6 +5,8 @@ const routes = require("./routes/index.js")
 const connectDB = require("./db.js")
 const cookieParser = require("cookie-parser")
 const authMiddleWare = require("./middleware/authCheck.js")
+const i18n = require("./i18n/config.js") // ✅ Add
+const i18nmiddleware = require("i18next-http-middleware") // ✅ Add
 
 const app = express()
 const PORT = process.env.PORT
@@ -19,6 +21,7 @@ app.use(
 )
 app.use(cookieParser())
 app.use(express.json())
+app.use(i18nmiddleware.handle(i18n))
 
 // Mount API routes
 app.use("/api", routes)
@@ -26,7 +29,7 @@ app.use("/api", routes)
 // 404 handler
 app.use("*", authMiddleWare, (req, res) => {
 	res.status(404).json({
-		error: "Тој линк не постои",
+		error: req.t("errors.notFound"),
 		path: req.originalUrl,
 		method: req.method,
 	})

@@ -19,7 +19,7 @@ const logAction = async (req, { action, entityType, entityId, details }) => {
 			entityType,
 			entityId,
 			userId,
-			username: user?.username || "Непознат",
+			username: user?.username || "?",
 			details,
 		})
 

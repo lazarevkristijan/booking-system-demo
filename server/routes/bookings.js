@@ -1,7 +1,6 @@
 const express = require("express")
 const router = express.Router()
 const Booking = require("../models/Booking.js")
-const Service = require("../models/Service.js")
 const { logAction } = require("../utils/logger.js")
 
 // GET /api/bookings - List all bookings with related data
@@ -57,7 +56,7 @@ router.get("/", async (req, res) => {
 		res.json(formattedBookings)
 	} catch (error) {
 		console.error("Error fetching bookings:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 
@@ -75,7 +74,7 @@ router.get("/:id", async (req, res) => {
 		if (!booking) {
 			return res
 				.status(404)
-				.json({ error: "Резервацијата не е пронајдена" })
+				.json({ error: req.t("errors.bookingNotFound") })
 		}
 
 		const formattedBooking = {
@@ -101,7 +100,7 @@ router.get("/:id", async (req, res) => {
 		res.json(formattedBooking)
 	} catch (error) {
 		console.error("Error fetching booking:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 
@@ -131,7 +130,7 @@ router.post("/", async (req, res) => {
 			service_ids.length === 0
 		) {
 			return res.status(400).json({
-				error: "employee_id, client_id, start_time, end_time и service_ids се задолжителни",
+				error: req.t("validation.bookingFieldsRequired"),
 			})
 		}
 
@@ -156,7 +155,7 @@ router.post("/", async (req, res) => {
 		if (overlappingBooking) {
 			return res
 				.status(400)
-				.json({ error: "Служителот не е слободен во ова време" })
+				.json({ error: req.t("errors.employeeNotAvailable") })
 		}
 
 		// Check for overlapping bookings - CLIENT
@@ -180,7 +179,7 @@ router.post("/", async (req, res) => {
 		if (overlappingClientBooking) {
 			return res
 				.status(400)
-				.json({ error: "Клиентот веќе има резервација во ова време" })
+				.json({ error: req.t("errors.clientHasBooking") })
 		}
 
 		// Create booking
@@ -224,21 +223,27 @@ router.post("/", async (req, res) => {
 
 		try {
 			await logAction(req, {
-				action: "Креирање",
-				entityType: "термин",
+				action: req.t("actions.create"),
+				entityType: req.t("entities.booking"),
 				entityId: booking._id,
-				details: `клиент: ${formattedBooking.client.name}, тел: ${
+				details: `${req.t("entities.client")}: ${
+					formattedBooking.client.name
+				}, ${req.t("entities.phone")}: ${
 					formattedBooking.client.phone
-				} служител: ${
+				} ${req.t("entities.employee")}: ${
 					formattedBooking.employee.name
-				} термин:${formattedBooking.startTime.toLocaleString("mk-MK")}`,
+				} ${req.t(
+					"entities.appointment"
+				)}:${formattedBooking.startTime.toLocaleString(
+					req.t("common.locale")
+				)}`,
 			})
 		} catch {}
 
 		res.status(201).json(formattedBooking)
 	} catch (error) {
 		console.error("Error creating booking:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 
@@ -258,28 +263,34 @@ router.delete("/:id", async (req, res) => {
 		if (!prevBooking) {
 			return res
 				.status(404)
-				.json({ error: "Резервацијата не е пронајдена" })
+				.json({ error: req.t("errors.bookingNotFound") })
 		}
 
 		const booking = await Booking.findByIdAndDelete(id)
 
 		try {
 			await logAction(req, {
-				action: "Бришење",
-				entityType: "термин",
+				action: req.t("actions.delete"),
+				entityType: req.t("entities.booking"),
 				entityId: id,
-				details: `клиент: ${prevBooking.client_id.full_name}, тел: ${
+				details: `${req.t("entities.client")}: ${
+					prevBooking.client_id.full_name
+				}, ${req.t("entities.phone")}: ${
 					prevBooking.client_id.phone
-				}, служител: ${
+				}, ${req.t("entities.employee")}: ${
 					prevBooking.employee_id.name
-				}, термин: ${prevBooking.start_time.toLocaleString("mk-MK")}`,
+				}, ${req.t(
+					"entities.appointment"
+				)}: ${prevBooking.start_time.toLocaleString(
+					req.t("common.locale")
+				)}`,
 			})
 		} catch {}
 
-		res.json({ message: "Резервацијата е избришана" })
+		res.json({ message: req.t("success.bookingDeleted") })
 	} catch (error) {
 		console.error("Error deleting booking:", error)
-		res.status(500).json({ error: "Грешка во серверот" })
+		res.status(500).json({ error: req.t("errors.serverError") })
 	}
 })
 
