@@ -33,7 +33,7 @@ export const ClientsPage = () => {
 	})
 
 	// Fetch clients with pagination and search
-	const { data, isLoading, isFetching } = useQuery({
+	const { data, isFetching } = useQuery({
 		queryKey: ["clients_paginated", currentPage, searchTerm],
 		queryFn: () => getClients(currentPage, pageSize, searchTerm),
 		keepPreviousData: true,
@@ -139,19 +139,6 @@ export const ClientsPage = () => {
 		const minutes = String(date.getMinutes()).padStart(2, "0")
 
 		return `${day} ${month} ${year}, ${hours}:${minutes}`
-	}
-
-	if (isLoading) {
-		return (
-			<div className="p-4 sm:p-6">
-				<div className="max-w-6xl mx-auto">
-					<div className="animate-pulse space-y-4">
-						<div className="h-8 bg-slate-200 rounded w-1/4"></div>
-						<div className="h-96 bg-slate-200 rounded"></div>
-					</div>
-				</div>
-			</div>
-		)
 	}
 
 	return (
