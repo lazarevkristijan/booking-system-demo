@@ -54,7 +54,12 @@ const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
 	}
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+		<div className="relative min-h-screen flex items-center justify-center bg-slate-50 px-4">
+			<img
+				src="https://i.imgur.com/34GnLcB.png"
+				alt="Digitermin logo"
+				className="absolute w-[60px] h-[60px] right-2 top-2"
+			/>
 			<div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
 				<div className="mb-8 text-center">
 					<h1 className="text-2xl font-bold text-slate-800 font-poppins mb-2">
