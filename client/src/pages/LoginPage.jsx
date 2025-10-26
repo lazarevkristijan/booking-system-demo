@@ -72,7 +72,7 @@ const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
 					className="mb-6 w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-50 border-2 border-blue-200 text-blue-700 font-medium rounded-lg hover:bg-blue-100 hover:border-blue-300 transition-colors"
 				>
 					<Info className="h-5 w-5" />
-					Користете демо податоци за најава
+					Кликни за демо податоци за најава
 				</button>
 
 				<form
