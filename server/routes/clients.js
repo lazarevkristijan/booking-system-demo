@@ -23,7 +23,7 @@ router.get("/", async (req, res) => {
 		const organizationId = req.organizationId // From auth middleware
 		if (!organizationId) {
 			return res.status(400).json({
-				error: req.t("validation.organizationRequired"),
+				error: "Идентификатор на организација е задолжителен",
 			})
 		}
 
@@ -56,7 +56,7 @@ router.get("/", async (req, res) => {
 		})
 	} catch (error) {
 		console.error("Error fetching clients:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -100,7 +100,7 @@ router.get("/all/history", async (req, res) => {
 		res.json(history)
 	} catch (error) {
 		console.error("Error fetching history:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -113,15 +113,13 @@ router.get("/:id", async (req, res) => {
 		})
 
 		if (!client) {
-			return res
-				.status(404)
-				.json({ error: req.t("errors.clientNotFound") })
+			return res.status(404).json({ error: "Клиентот не е пронајден" })
 		}
 
 		res.json(client)
 	} catch (error) {
 		console.error("Error fetching client:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -137,9 +135,7 @@ router.get("/:id/history", async (req, res) => {
 		})
 
 		if (!client) {
-			return res
-				.status(404)
-				.json({ error: req.t("errors.clientNotFound") })
+			return res.status(404).json({ error: "Клиентот не е пронајден" })
 		}
 
 		// Get booking history with services and employee info
@@ -170,7 +166,7 @@ router.get("/:id/history", async (req, res) => {
 		res.json(history)
 	} catch (error) {
 		console.error("Error fetching client history:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -181,28 +177,26 @@ router.post("/", async (req, res) => {
 
 		// Validation
 		if (!full_name || full_name.trim() === "") {
-			return res
-				.status(400)
-				.json({ error: req.t("validation.nameRequired") })
+			return res.status(400).json({ error: "Името е задолжително" })
 		}
 
 		const cleanedPhone = phone?.trim().replace(/\s/g, "") || ""
 
 		if (!cleanedPhone || cleanedPhone === "" || isNaN(cleanedPhone)) {
 			return res.status(400).json({
-				error: req.t("validation.phoneRequired"),
+				error: "Телефонскиот број е задолжителен и мора да биде валиден број (броеви 0-9)",
 			})
 		}
 
 		const organizationId = req.organizationId // From auth middleware
 		if (!organizationId) {
 			return res.status(400).json({
-				error: req.t("validation.organizationRequired"),
+				error: "Идентификатор на организација е задолжителен",
 			})
 		}
 		if (await Client.findOne({ phone: cleanedPhone, organizationId })) {
 			return res.status(400).json({
-				error: req.t("errors.clientPhoneExists"),
+				error: "Клиент со овој телефонски број веќе постои",
 			})
 		}
 
@@ -217,19 +211,17 @@ router.post("/", async (req, res) => {
 
 		try {
 			await logAction(req, {
-				action: req.t("actions.create"),
-				entityType: req.t("entities.client"),
+				action: "Креирање",
+				entityType: "Клиент",
 				entityId: client._id,
-				details: `${req.t("entities.name")}: ${
-					client.full_name
-				}, ${req.t("entities.phone")}: ${client.phone}`,
+				details: `Име: ${client.full_name}, Телефон: ${client.phone}`,
 			})
 		} catch {}
 
 		res.json(client)
 	} catch (error) {
 		console.error("Error creating client:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -241,7 +233,7 @@ router.put("/:id", async (req, res) => {
 
 		if (!full_name || full_name.trim() === "" || isHidden === undefined) {
 			return res.status(400).json({
-				error: req.t("validation.clientFieldsRequired"),
+				error: "Сите полиња за клиентот се задолжителни",
 			})
 		}
 
@@ -249,16 +241,14 @@ router.put("/:id", async (req, res) => {
 
 		if (!cleanedPhone || cleanedPhone === "" || isNaN(cleanedPhone)) {
 			return res.status(400).json({
-				error: req.t("validation.phoneRequired"),
+				error: "Телефонскиот број е задолжителен и мора да биде валиден број (броеви 0-9)",
 			})
 		}
 
 		clientFromId = await Client.findOne({ _id: id })
 		// SECURITY: Verify client belongs to user's organization
 		if (!clientFromId) {
-			return res
-				.status(404)
-				.json({ error: req.t("errors.clientNotFound") })
+			return res.status(404).json({ error: "Клиентот не е пронајден" })
 		}
 		if (
 			clientFromId.organizationId.toString() !==
@@ -266,7 +256,7 @@ router.put("/:id", async (req, res) => {
 		) {
 			return res
 				.status(403)
-				.json({ error: req.t("errors.noAccessToClient") })
+				.json({ error: "Немате пристап до овој клиент" })
 		}
 
 		if (clientFromId.phone !== cleanedPhone) {
@@ -277,7 +267,7 @@ router.put("/:id", async (req, res) => {
 				})
 			) {
 				return res.status(400).json({
-					error: req.t("errors.clientPhoneExists"),
+					error: "Клиент со овој телефонски број веќе постои",
 				})
 			}
 		}
@@ -295,28 +285,22 @@ router.put("/:id", async (req, res) => {
 		)
 
 		if (!client) {
-			return res
-				.status(404)
-				.json({ error: req.t("errors.clientNotFound") })
+			return res.status(404).json({ error: "Клиентот не е пронајден" })
 		}
 
 		try {
 			await logAction(req, {
-				action: req.t("actions.update"),
-				entityType: req.t("entities.client"),
+				action: "Ажурирање",
+				entityType: "Клиент",
 				entityId: client._id,
-				details: `${req.t("entities.name")}: ${prevClient.full_name}->${
-					client.full_name
-				}, ${req.t("entities.phone")}: ${prevClient.phone}->${
-					client.phone
-				}`,
+				details: `Име: ${prevClient.full_name}->${client.full_name}, Телефон: ${prevClient.phone}->${client.phone}`,
 			})
 		} catch {}
 
 		res.json(client)
 	} catch (error) {
 		console.error("Error updating client:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -331,9 +315,7 @@ router.delete("/:id", async (req, res) => {
 		})
 
 		if (!employee) {
-			return res
-				.status(404)
-				.json({ error: req.t("errors.clientNotFound") })
+			return res.status(404).json({ error: "Клиентот не е пронајден" })
 		}
 		// Check if client has future bookings
 		const futureBookings = await Booking.countDocuments({
@@ -343,7 +325,7 @@ router.delete("/:id", async (req, res) => {
 
 		if (futureBookings > 0) {
 			return res.status(400).json({
-				error: req.t("errors.clientHasBookings"),
+				error: "Клиентот има идни резервации и не може да се избрише",
 			})
 		}
 
@@ -351,17 +333,17 @@ router.delete("/:id", async (req, res) => {
 
 		try {
 			await logAction(req, {
-				action: req.t("actions.delete"),
-				entityType: req.t("entities.client"),
+				action: "Бришење",
+				entityType: "Клиент",
 				entityId: client._id,
 				details: client.full_name,
 			})
 		} catch {}
 
-		res.json({ message: req.t("success.clientDeleted") })
+		res.json({ message: "Клиентот е успешно избришан" })
 	} catch (error) {
 		console.error("Error deleting client:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -377,24 +359,22 @@ router.patch("/:id/restore", async (req, res) => {
 		)
 
 		if (!client) {
-			return res
-				.status(404)
-				.json({ error: req.t("errors.clientNotFound") })
+			return res.status(404).json({ error: "Клиентот не е пронајден" })
 		}
 
 		try {
 			await logAction(req, {
-				action: req.t("actions.restore"),
-				entityType: req.t("entities.client"),
+				action: "Враќање",
+				entityType: "Клиент",
 				entityId: client._id,
 				details: client.full_name,
 			})
 		} catch {}
 
-		res.json({ message: req.t("success.clientRestored"), client })
+		res.json({ message: "Клиентот е успешно вратен", client })
 	} catch (error) {
 		console.error("Error restoring client:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 

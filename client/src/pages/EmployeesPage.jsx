@@ -10,11 +10,9 @@ import {
 	postNewEmployeeFromPage,
 } from "../constants"
 import { TableSkeleton } from "../components/LoadingSkeleton"
-import { useTranslation } from "react-i18next"
 
 export const EmployeesPage = () => {
-	const { t } = useTranslation()
-	const queryClient = useQueryClient() // ADD THIS
+	const queryClient = useQueryClient()
 
 	const [employees, setEmployees] = useState([])
 	const [showModal, setShowModal] = useState(false)
@@ -30,7 +28,7 @@ export const EmployeesPage = () => {
 		if (allEmployees) setEmployees(allEmployees)
 	}, [allEmployees])
 
-	const columns = [{ key: "name", label: t("employees.name"), type: "text" }]
+	const columns = [{ key: "name", label: "Име", type: "text" }]
 
 	const handleAdd = () => {
 		setSelectedEmployee(null)
@@ -49,7 +47,9 @@ export const EmployeesPage = () => {
 
 	const handleDelete = async (employee) => {
 		if (
-			window.confirm(`${t("employees.deleteConfirm")} - ${employee.name}`)
+			window.confirm(
+				`Дали сте сигурни дека сакате да го избришете овој вработен? - ${employee.name}`
+			)
 		) {
 			await deleteEmploeeFromPage(employee, employees, setEmployees)
 
@@ -101,23 +101,23 @@ export const EmployeesPage = () => {
 				{/* Header */}
 				<div className="mb-6 sm:mb-8">
 					<h1 className="text-2xl sm:text-3xl font-bold text-slate-800 font-poppins">
-						{t("employees.title")}
+						Вработени
 					</h1>
 					<p className="text-slate-600 mt-1 text-sm sm:text-base">
-						{t("employees.subtitle")}
+						Управување со вашиот персонал
 					</p>
 				</div>
 
 				{/* CRUD Table */}
 				<CrudTable
-					title={t("employees.title")}
+					title="Вработени"
 					data={employees}
 					columns={columns}
 					onAdd={handleAdd}
 					onEdit={handleEdit}
 					onDelete={handleDelete}
-					searchPlaceholder={t("employees.searchPlaceholder")}
-					addButtonText={t("employees.addEmployee")}
+					searchPlaceholder="Пребарување на вработени..."
+					addButtonText="Додади Вработен"
 				/>
 
 				{/* Modal */}
@@ -135,8 +135,8 @@ export const EmployeesPage = () => {
 									<div className="px-4 sm:px-6 py-4 border-b border-slate-200">
 										<h3 className="text-base sm:text-lg font-semibold text-slate-800 font-poppins">
 											{selectedEmployee
-												? t("employees.editEmployee")
-												: t("employees.addEmployee")}
+												? "Уреди Вработен"
+												: "Додади Вработен"}
 										</h3>
 									</div>
 
@@ -144,7 +144,7 @@ export const EmployeesPage = () => {
 									<div className="px-4 sm:px-6 py-6">
 										<div>
 											<label className="block text-sm font-medium text-slate-700 mb-2">
-												{t("employees.employeeName")}
+												Име на Вработен
 											</label>
 											<input
 												type="text"
@@ -157,9 +157,7 @@ export const EmployeesPage = () => {
 													})
 												}
 												className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent touch-manipulation"
-												placeholder={t(
-													"employees.namePlaceholder"
-												)}
+												placeholder="Внесете име и презиме на вработениот"
 											/>
 										</div>
 									</div>
@@ -171,15 +169,15 @@ export const EmployeesPage = () => {
 											onClick={() => setShowModal(false)}
 											className="px-4 py-3 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 touch-manipulation min-h-[44px]"
 										>
-											{t("common.cancel")}
+											Откажи
 										</button>
 										<button
 											type="submit"
 											className="px-6 py-3 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 touch-manipulation min-h-[44px]"
 										>
 											{selectedEmployee
-												? t("common.update")
-												: t("common.create")}
+												? "Ажурирај"
+												: "Креирај"}
 										</button>
 									</div>
 								</form>

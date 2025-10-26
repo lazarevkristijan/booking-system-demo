@@ -10,11 +10,9 @@ import {
 } from "../constants"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect } from "react"
-import { useTranslation } from "react-i18next"
 
 export const ServicesPage = () => {
-	const { t } = useTranslation()
-	const queryClient = useQueryClient() // ADD THIS
+	const queryClient = useQueryClient()
 
 	const [services, setServices] = useState([])
 	const [showModal, setShowModal] = useState(false)
@@ -35,9 +33,9 @@ export const ServicesPage = () => {
 	}, [allServices])
 
 	const columns = [
-		{ key: "name", label: t("services.name"), type: "text" },
-		{ key: "duration", label: t("services.duration"), type: "text" },
-		{ key: "price", label: t("services.price"), type: "currency" },
+		{ key: "name", label: "Име на услугата", type: "text" },
+		{ key: "duration", label: "Траење", type: "text" },
+		{ key: "price", label: "Цена", type: "currency" },
 	]
 
 	const handleAdd = () => {
@@ -59,7 +57,9 @@ export const ServicesPage = () => {
 
 	const handleDelete = async (service) => {
 		if (
-			window.confirm(`${t("services.deleteConfirm")} - ${service.name}`)
+			window.confirm(
+				`Дали сте сигурни дека сакате да ја избришете оваа услуга? - ${service.name}`
+			)
 		) {
 			await deleteServiceFrompage(service, services, setServices)
 
@@ -96,23 +96,23 @@ export const ServicesPage = () => {
 				{/* Header */}
 				<div className="mb-6 sm:mb-8">
 					<h1 className="text-2xl sm:text-3xl font-bold text-slate-800 font-poppins">
-						{t("services.title")}
+						Услуги
 					</h1>
 					<p className="text-slate-600 mt-1 text-sm sm:text-base">
-						{t("services.subtitle")}
+						Управување со услугите, цените и времетраењето
 					</p>
 				</div>
 
 				{/* CRUD Table */}
 				<CrudTable
-					title={t("services.tableTitle")}
+					title="Предлагани услуги"
 					data={services}
 					columns={columns}
 					onAdd={handleAdd}
 					onEdit={handleEdit}
 					onDelete={handleDelete}
-					searchPlaceholder={t("services.searchPlaceholder")}
-					addButtonText={t("services.addService")}
+					searchPlaceholder="Пребарување на услуги..."
+					addButtonText="Додади Услуга"
 				/>
 
 				{/* Modal */}
@@ -130,8 +130,8 @@ export const ServicesPage = () => {
 									<div className="px-4 sm:px-6 py-4 border-b border-slate-200">
 										<h3 className="text-base sm:text-lg font-semibold text-slate-800 font-poppins">
 											{selectedService
-												? t("services.editService")
-												: t("services.addService")}
+												? "Уреди Услуга"
+												: "Додади Услуга"}
 										</h3>
 									</div>
 
@@ -139,7 +139,7 @@ export const ServicesPage = () => {
 									<div className="px-4 sm:px-6 py-6 space-y-4">
 										<div>
 											<label className="block text-sm font-medium text-slate-700 mb-2">
-												{t("services.serviceName")} *
+												Име на Услуга *
 											</label>
 											<input
 												type="text"
@@ -152,16 +152,13 @@ export const ServicesPage = () => {
 													})
 												}
 												className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent touch-manipulation"
-												placeholder={t(
-													"services.namePlaceholder"
-												)}
+												placeholder="Внесете име на услугата"
 											/>
 										</div>
 
 										<div>
 											<label className="block text-sm font-medium text-slate-700 mb-2">
-												{t("services.durationMinutes")}{" "}
-												*
+												Траење (минути) *
 											</label>
 											<input
 												type="number"
@@ -176,15 +173,13 @@ export const ServicesPage = () => {
 													})
 												}
 												className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent touch-manipulation"
-												placeholder={t(
-													"services.durationPlaceholder"
-												)}
+												placeholder="30"
 											/>
 										</div>
 
 										<div>
 											<label className="block text-sm font-medium text-slate-700 mb-2">
-												{t("services.priceAmount")} *
+												Цена (ден.) *
 											</label>
 											<input
 												type="number"
@@ -199,9 +194,7 @@ export const ServicesPage = () => {
 													})
 												}
 												className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent touch-manipulation"
-												placeholder={t(
-													"services.pricePlaceholder"
-												)}
+												placeholder="25.00"
 											/>
 										</div>
 									</div>
@@ -213,15 +206,15 @@ export const ServicesPage = () => {
 											onClick={() => setShowModal(false)}
 											className="px-4 py-3 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 touch-manipulation min-h-[44px]"
 										>
-											{t("common.cancel")}
+											Откажи
 										</button>
 										<button
 											type="submit"
 											className="px-6 py-3 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 touch-manipulation min-h-[44px]"
 										>
 											{selectedService
-												? t("common.update")
-												: t("common.create")}
+												? "Ажурирај"
+												: "Креирај"}
 										</button>
 									</div>
 								</form>

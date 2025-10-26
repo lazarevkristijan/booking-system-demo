@@ -1,5 +1,4 @@
 import { X, AlertTriangle } from "lucide-react"
-import { useTranslation } from "react-i18next"
 
 export const ConfirmModal = ({
 	isOpen,
@@ -10,12 +9,12 @@ export const ConfirmModal = ({
 	confirmText,
 	cancelText,
 }) => {
-	const { t } = useTranslation()
-
-	const defaultTitle = title || t("common.areYouSure")
-	const defaultMessage = message || t("common.deleteConfirmMessage")
-	const defaultConfirmText = confirmText || t("common.yesDelete")
-	const defaultCancelText = cancelText || t("common.cancel")
+	const defaultTitle = title || "Дали сте сигурни?"
+	const defaultMessage =
+		message ||
+		"Навистина ли сакате да го избришете овој елемент? Оваа акција е неповратна."
+	const defaultConfirmText = confirmText || "Да, избриши"
+	const defaultCancelText = cancelText || "Откажи"
 
 	if (!isOpen) return null
 

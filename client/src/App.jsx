@@ -7,7 +7,6 @@ import axios from "axios"
 axios.defaults.withCredentials = true
 import { getCurrentUser, getSession } from "./constants"
 import { useQueryClient } from "@tanstack/react-query"
-import { useTranslation } from "react-i18next"
 import { OrganizationProvider } from "./contexts/OrganizationContext"
 
 // Lazy load admin pages for better performance
@@ -43,12 +42,11 @@ const OrganizationSettingsPage = lazy(() =>
 )
 
 const LoadingFallback = () => {
-	const { t } = useTranslation()
 	return (
 		<div className="flex items-center justify-center min-h-screen bg-slate-50">
 			<div className="text-center">
 				<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800 mx-auto mb-4"></div>
-				<p className="text-slate-600">{t("common.loading")}</p>
+				<p className="text-slate-600">Вчитување...</p>
 			</div>
 		</div>
 	)

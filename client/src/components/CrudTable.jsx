@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react"
-import { useTranslation } from "react-i18next"
 import {
 	Plus,
 	Edit,
@@ -28,13 +27,12 @@ export const CrudTable = ({
 	onSearchChange,
 	isLoading = false,
 }) => {
-	const { t } = useTranslation()
 	const [searchTerm, setSearchTerm] = useState("")
 	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm)
 	const [localCurrentPage, setLocalCurrentPage] = useState(1)
 
-	const finalSearchPlaceholder = searchPlaceholder || t("common.search")
-	const finalAddButtonText = addButtonText || t("common.add")
+	const finalSearchPlaceholder = searchPlaceholder || "Пребарување..."
+	const finalAddButtonText = addButtonText || "Додади Нов"
 
 	// Debounce search term
 	useEffect(() => {
@@ -113,13 +111,13 @@ export const CrudTable = ({
 
 		switch (type) {
 			case "currency":
-				return `${parseFloat(value).toFixed(2)} ${t("common.currency")}` // ✅
+				return `${parseFloat(value).toFixed(2)} ден.`
 			case "phone":
 				return value
 			case "date":
 				return new Date(value).toLocaleDateString()
 			case "datetime":
-				return new Date(value).toLocaleString(t("common.locale"), {
+				return new Date(value).toLocaleString("mk-MK", {
 					hour12: false,
 				})
 			default:
@@ -175,8 +173,8 @@ export const CrudTable = ({
 					<div className="px-4 sm:px-6 py-12 text-center">
 						<div className="text-slate-400 text-sm">
 							{searchTerm
-								? t("common.noResults")
-								: t("common.noData")}
+								? "Нема пронајдени резултати"
+								: "Нема достапни податоци"}
 						</div>
 						{!searchTerm && (
 							<button
@@ -201,7 +199,7 @@ export const CrudTable = ({
 									</th>
 								))}
 								<th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
-									{t("common.actions")}
+									Акции
 								</th>
 							</tr>
 						</thead>
@@ -234,7 +232,7 @@ export const CrudTable = ({
 													onClick={() => onView(item)}
 													disabled={isLoading}
 													className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors touch-manipulation disabled:opacity-50"
-													title={t("common.view")}
+													title="Види Детали"
 												>
 													<Eye className="h-4 w-4" />
 												</button>
@@ -244,7 +242,7 @@ export const CrudTable = ({
 													onClick={() => onEdit(item)}
 													disabled={isLoading}
 													className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors touch-manipulation disabled:opacity-50"
-													title={t("common.edit")}
+													title="Уреди"
 												>
 													<Edit className="h-4 w-4" />
 												</button>
@@ -256,7 +254,7 @@ export const CrudTable = ({
 													}
 													disabled={isLoading}
 													className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors touch-manipulation disabled:opacity-50"
-													title={t("common.delete")}
+													title="Избриши"
 												>
 													<Trash2 className="h-4 w-4" />
 												</button>
@@ -275,22 +273,22 @@ export const CrudTable = ({
 				<div className="px-4 sm:px-6 py-4 border-t border-slate-200">
 					<div className="flex flex-col sm:flex-row items-center justify-between gap-4">
 						<div className="text-sm text-slate-700">
-							{t("common.showing")} {/* ✅ */}
+							Прикажани{" "}
 							<span className="font-medium">
 								{startIndex + 1}
 							</span>{" "}
-							{t("common.to")} {/* ✅ */}
+							до{" "}
 							<span className="font-medium">
 								{Math.min(
 									startIndex + paginatedData.length,
 									totalDisplayItems
 								)}
 							</span>{" "}
-							{t("common.of")} {/* ✅ */}
+							од{" "}
 							<span className="font-medium">
 								{totalDisplayItems}
 							</span>{" "}
-							{t("common.results")} {/* ✅ */}
+							резултати
 						</div>
 
 						{totalPages > 1 && (
@@ -310,12 +308,12 @@ export const CrudTable = ({
 									className="inline-flex items-center px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] transition-colors"
 								>
 									<ChevronLeft className="h-4 w-4 mr-1" />
-									{t("common.previous")}
+									Претходна
 								</button>
 
 								<span className="text-sm text-slate-700 px-3">
-									{t("common.page")} {effectiveCurrentPage}{" "}
-									{t("common.of")} {totalPages}
+									Страна {effectiveCurrentPage} од{" "}
+									{totalPages}
 								</span>
 
 								<button
@@ -333,7 +331,7 @@ export const CrudTable = ({
 									}
 									className="inline-flex items-center px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] transition-colors"
 								>
-									{t("common.next")}
+									Следна
 									<ChevronRight className="h-4 w-4 ml-1" />
 								</button>
 							</div>

@@ -1,6 +1,5 @@
 import { Component } from "react"
 import { AlertTriangle } from "lucide-react"
-import { withTranslation } from "react-i18next"
 
 class ErrorBoundaryComponent extends Component {
 	constructor(props) {
@@ -21,8 +20,6 @@ class ErrorBoundaryComponent extends Component {
 	}
 
 	render() {
-		const { t } = this.props
-
 		if (this.state.hasError) {
 			return (
 				<div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
@@ -33,15 +30,16 @@ class ErrorBoundaryComponent extends Component {
 							</div>
 						</div>
 						<h1 className="text-2xl font-bold text-slate-800 mb-2">
-							{t("errorBoundary.title")}
+							Нешто тргна наопаку
 						</h1>
 						<p className="text-slate-600 mb-6">
-							{t("errorBoundary.message")}
+							Се случи неочекувана грешка. Ве молиме обидете се
+							повторно.
 						</p>
 						{this.state.error && (
 							<details className="text-left mb-4 p-4 bg-slate-50 rounded text-sm">
 								<summary className="cursor-pointer font-medium text-slate-700 mb-2">
-									{t("errorBoundary.details")}
+									Детали за грешката
 								</summary>
 								<pre className="text-xs text-red-600 overflow-auto">
 									{this.state.error.toString()}
@@ -53,7 +51,7 @@ class ErrorBoundaryComponent extends Component {
 							onClick={() => window.location.reload()}
 							className="w-full px-6 py-3 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-700 transition-colors"
 						>
-							{t("errorBoundary.reload")}
+							Освежи ја страницата
 						</button>
 					</div>
 				</div>
@@ -64,5 +62,4 @@ class ErrorBoundaryComponent extends Component {
 	}
 }
 
-// Export with translation HOC
-export const ErrorBoundary = withTranslation()(ErrorBoundaryComponent)
+export const ErrorBoundary = ErrorBoundaryComponent

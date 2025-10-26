@@ -64,7 +64,7 @@ router.get("/", async (req, res) => {
 		res.json(formattedBookings)
 	} catch (error) {
 		console.error("Error fetching bookings:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -88,7 +88,7 @@ router.get("/:id", async (req, res) => {
 		if (!booking) {
 			return res
 				.status(404)
-				.json({ error: req.t("errors.bookingNotFound") })
+				.json({ error: "Резервацијата не е пронајдена" })
 		}
 
 		const formattedBooking = {
@@ -114,7 +114,7 @@ router.get("/:id", async (req, res) => {
 		res.json(formattedBooking)
 	} catch (error) {
 		console.error("Error fetching booking:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -148,7 +148,7 @@ router.post("/", async (req, res) => {
 			service_ids.length === 0
 		) {
 			return res.status(400).json({
-				error: req.t("validation.bookingFieldsRequired"),
+				error: "Сите полиња за резервација се задолжителни",
 			})
 		}
 
@@ -177,7 +177,7 @@ router.post("/", async (req, res) => {
 		if (overlappingBooking) {
 			return res
 				.status(400)
-				.json({ error: req.t("errors.employeeNotAvailable") })
+				.json({ error: "Вработениот не е достапен во избраното време" })
 		}
 
 		// Check for overlapping bookings - CLIENT
@@ -199,9 +199,9 @@ router.post("/", async (req, res) => {
 		})
 
 		if (overlappingClientBooking) {
-			return res
-				.status(400)
-				.json({ error: req.t("errors.clientHasBooking") })
+			return res.status(400).json({
+				error: "Клиентот веќе има резервација во избраното време",
+			})
 		}
 
 		// Create booking with UTC times
@@ -246,19 +246,15 @@ router.post("/", async (req, res) => {
 
 		try {
 			await logAction(req, {
-				action: req.t("actions.create"),
-				entityType: req.t("entities.booking"),
+				action: "Креирање",
+				entityType: "Резервација",
 				entityId: booking._id,
-				details: `${req.t("entities.client")}: ${
-					formattedBooking.client.name
-				}, ${req.t("entities.phone")}: ${
+				details: `Клиент: ${formattedBooking.client.name}, Телефон: ${
 					formattedBooking.client.phone
-				} ${req.t("entities.employee")}: ${
+				}, Вработен: ${
 					formattedBooking.employee.name
-				} ${req.t(
-					"entities.appointment"
-				)}:${formattedBooking.startTime.toLocaleString(
-					req.t("common.locale")
+				}, Термин: ${formattedBooking.startTime.toLocaleString(
+					"mk-MK"
 				)}`,
 			})
 		} catch {}
@@ -266,7 +262,7 @@ router.post("/", async (req, res) => {
 		res.status(201).json(formattedBooking)
 	} catch (error) {
 		console.error("Error creating booking:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -301,7 +297,7 @@ router.put("/:id", async (req, res) => {
 			service_ids.length === 0
 		) {
 			return res.status(400).json({
-				error: req.t("validation.bookingFieldsRequired"),
+				error: "Сите полиња за резервација се задолжителни",
 			})
 		}
 
@@ -317,7 +313,7 @@ router.put("/:id", async (req, res) => {
 		if (!existingBooking) {
 			return res
 				.status(404)
-				.json({ error: req.t("errors.bookingNotFound") })
+				.json({ error: "Резервацијата не е пронајдена" })
 		}
 
 		// Convert incoming times from organization timezone to UTC
@@ -346,7 +342,7 @@ router.put("/:id", async (req, res) => {
 		if (overlappingEmployeeBooking) {
 			return res
 				.status(400)
-				.json({ error: req.t("errors.employeeNotAvailable") })
+				.json({ error: "Вработениот не е достапен во избраното време" })
 		}
 
 		// Check for overlapping bookings with CLIENT (excluding current booking)
@@ -369,9 +365,9 @@ router.put("/:id", async (req, res) => {
 		})
 
 		if (overlappingClientBooking) {
-			return res
-				.status(400)
-				.json({ error: req.t("errors.clientHasBooking") })
+			return res.status(400).json({
+				error: "Клиентот веќе има резервација во избраното време",
+			})
 		}
 
 		// Update booking with UTC times
@@ -425,19 +421,15 @@ router.put("/:id", async (req, res) => {
 
 		try {
 			await logAction(req, {
-				action: req.t("actions.update"),
-				entityType: req.t("entities.booking"),
+				action: "Ажурирање",
+				entityType: "Резервација",
 				entityId: existingBooking._id,
-				details: `${req.t("entities.client")}: ${
-					formattedBooking.client.name
-				}, ${req.t("entities.phone")}: ${
+				details: `Клиент: ${formattedBooking.client.name}, Телефон: ${
 					formattedBooking.client.phone
-				}, ${req.t("entities.employee")}: ${
+				}, Вработен: ${
 					formattedBooking.employee.name
-				}, ${req.t(
-					"entities.appointment"
-				)}: ${formattedBooking.startTime.toLocaleString(
-					req.t("common.locale")
+				}, Термин: ${formattedBooking.startTime.toLocaleString(
+					"mk-MK"
 				)}`,
 			})
 		} catch {}
@@ -445,7 +437,7 @@ router.put("/:id", async (req, res) => {
 		res.json(formattedBooking)
 	} catch (error) {
 		console.error("Error updating booking:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -465,34 +457,28 @@ router.delete("/:id", async (req, res) => {
 		if (!prevBooking) {
 			return res
 				.status(404)
-				.json({ error: req.t("errors.bookingNotFound") })
+				.json({ error: "Резервацијата не е пронајдена" })
 		}
 
 		const booking = await Booking.findByIdAndDelete(id)
 
 		try {
 			await logAction(req, {
-				action: req.t("actions.delete"),
-				entityType: req.t("entities.booking"),
+				action: "Бришење",
+				entityType: "Резервација",
 				entityId: id,
-				details: `${req.t("entities.client")}: ${
+				details: `Клиент: ${
 					prevBooking.client_id.full_name
-				}, ${req.t("entities.phone")}: ${
-					prevBooking.client_id.phone
-				}, ${req.t("entities.employee")}: ${
+				}, Телефон: ${prevBooking.client_id.phone}, Вработен: ${
 					prevBooking.employee_id.name
-				}, ${req.t(
-					"entities.appointment"
-				)}: ${prevBooking.start_time.toLocaleString(
-					req.t("common.locale")
-				)}`,
+				}, Термин: ${prevBooking.start_time.toLocaleString("mk-MK")}`,
 			})
 		} catch {}
 
-		res.json({ message: req.t("success.bookingDeleted") })
+		res.json({ message: "Резервацијата е успешно избришана" })
 	} catch (error) {
 		console.error("Error deleting booking:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 

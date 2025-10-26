@@ -1,5 +1,5 @@
 {
-	"name": "booking-system-demo-backend",
+	"name": "digitermin-backend",
 	"version": "1.0.0",
 	"description": "Node.js backend for hair salon booking platform",
 	"main": "server.js",
@@ -9,10 +9,7 @@
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"keywords": [
-		"hair salon",
-		"booking",
-		"express",
-		"postgresql"
+		"booking"
 	],
 	"author": "",
 	"license": "MIT",
@@ -22,9 +19,6 @@
 		"cors": "^2.8.5",
 		"dotenv": "^16.3.1",
 		"express": "^4.18.2",
-		"i18next": "^25.6.0",
-		"i18next-fs-backend": "^2.6.0",
-		"i18next-http-middleware": "^3.8.1",
 		"jsonwebtoken": "^9.0.2",
 		"luxon": "^3.7.2",
 		"mongodb": "^6.20.0",

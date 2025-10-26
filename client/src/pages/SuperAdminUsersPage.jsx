@@ -16,10 +16,7 @@ import {
 	deleteUserFromOrg,
 	getAllOrganizations,
 } from "../constants"
-import { useTranslation } from "react-i18next"
-
 export const SuperAdminUsersPage = () => {
-	const { t } = useTranslation()
 	const queryClient = useQueryClient()
 	const [currentPage, setCurrentPage] = useState(1)
 	const [filterOrgId, setFilterOrgId] = useState("")
@@ -267,9 +264,7 @@ export const SuperAdminUsersPage = () => {
 											<td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
 												{new Date(
 													user.createdAt
-												).toLocaleDateString(
-													t("common.locale")
-												)}
+												).toLocaleDateString("mk-MK")}
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
 												<button

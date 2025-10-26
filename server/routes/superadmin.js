@@ -8,7 +8,7 @@ const { logAction } = require("../utils/logger.js")
 // Middleware for superadmin only
 const requireSuperAdmin = (req, res, next) => {
 	if (req.userRole !== "superadmin") {
-		return res.status(403).json({ error: req.t("errors.superadminOnly") })
+		return res.status(403).json({ error: "Само за супер администратори" })
 	}
 	next()
 }
@@ -50,7 +50,7 @@ router.get("/users", requireSuperAdmin, async (req, res) => {
 		})
 	} catch (error) {
 		console.error("Error fetching users:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -63,21 +63,19 @@ router.post("/users", requireSuperAdmin, async (req, res) => {
 		if (!username || username.trim() === "") {
 			return res
 				.status(400)
-				.json({ error: req.t("validation.usernameRequired") })
+				.json({ error: "Корисничко име е задолжително" })
 		}
 		if (!password || password.length < 4) {
 			return res
 				.status(400)
-				.json({ error: req.t("validation.passwordMinLength") })
+				.json({ error: "Лозинката мора да има најмалку 4 знаци" })
 		}
 		if (role && !["superadmin", "admin", "user"].includes(role)) {
-			return res
-				.status(400)
-				.json({ error: req.t("validation.invalidRole") })
+			return res.status(400).json({ error: "Невалидна улога" })
 		}
 		if (role !== "superadmin" && !organizationId) {
 			return res.status(400).json({
-				error: req.t("errors.organizationRequiredForNonSuperadmin"),
+				error: "Организација е задолжителна за корисници кои не се супер администратори",
 			})
 		}
 
@@ -86,7 +84,7 @@ router.post("/users", requireSuperAdmin, async (req, res) => {
 		if (existingUser) {
 			return res
 				.status(400)
-				.json({ error: req.t("errors.usernameExists") })
+				.json({ error: "Корисничкото име веќе постои" })
 		}
 
 		// Verify organization exists
@@ -95,7 +93,7 @@ router.post("/users", requireSuperAdmin, async (req, res) => {
 			if (!org) {
 				return res
 					.status(404)
-					.json({ error: req.t("errors.organizationNotFound") })
+					.json({ error: "Организацијата не е пронајдена" })
 			}
 		}
 
@@ -117,7 +115,7 @@ router.post("/users", requireSuperAdmin, async (req, res) => {
 		res.status(201).json(userResponse)
 	} catch (error) {
 		console.error("Error creating user:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -129,7 +127,7 @@ router.put("/users/:id", requireSuperAdmin, async (req, res) => {
 
 		const existingUser = await User.findById(id)
 		if (!existingUser) {
-			return res.status(404).json({ error: req.t("errors.userNotFound") })
+			return res.status(404).json({ error: "Корисникот не е пронајден" })
 		}
 
 		// Check username uniqueness
@@ -141,7 +139,7 @@ router.put("/users/:id", requireSuperAdmin, async (req, res) => {
 			if (duplicate) {
 				return res
 					.status(400)
-					.json({ error: req.t("errors.usernameExists") })
+					.json({ error: "Корисничкото име веќе постои" })
 			}
 		}
 
@@ -168,7 +166,7 @@ router.put("/users/:id", requireSuperAdmin, async (req, res) => {
 		res.json(user)
 	} catch (error) {
 		console.error("Error updating user:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -181,18 +179,18 @@ router.delete("/users/:id", requireSuperAdmin, async (req, res) => {
 		if (id === req.userId.toString()) {
 			return res
 				.status(400)
-				.json({ error: req.t("errors.cannotDeleteSelf") })
+				.json({ error: "Не можете да се избришете себеси" })
 		}
 
 		const user = await User.findByIdAndDelete(id)
 		if (!user) {
-			return res.status(404).json({ error: req.t("errors.userNotFound") })
+			return res.status(404).json({ error: "Корисникот не е пронајден" })
 		}
 
-		res.json({ message: req.t("success.userDeleted") })
+		res.json({ message: "Корисникот е успешно избришан" })
 	} catch (error) {
 		console.error("Error deleting user:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 

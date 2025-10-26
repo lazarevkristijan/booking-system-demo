@@ -14,19 +14,21 @@ router.post("/login", async (req, res) => {
 	)
 
 	if (!user)
-		return res.status(401).json({ error: req.t("auth.invalidCredentials") }) // ✅
+		return res
+			.status(401)
+			.json({ error: "Невалидно корисничко име или лозинка" })
 
 	// ✅ USE BCRYPT TO COMPARE PASSWORDS
 	const isPasswordValid = await bcrypt.compare(password, user.password)
 
 	if (!isPasswordValid) {
-		return res.status(401).json({ error: req.t("auth.invalidCredentials") }) // ✅
+		return res
+			.status(401)
+			.json({ error: "Невалидно корисничко име или лозинка" })
 	}
 
 	if (!user.organizationId.isActive) {
-		return res
-			.status(403)
-			.json({ error: req.t("auth.organizationDeactivated") }) // ✅
+		return res.status(403).json({ error: "Организацијата е деактивирана" })
 	}
 
 	const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -41,8 +43,8 @@ router.post("/login", async (req, res) => {
 		await logAction(
 			{ userId: user._id, organizationId: user.organizationId._id },
 			{
-				action: req.t("actions.login"),
-				entityType: req.t("entities.system"),
+				action: "Најава",
+				entityType: "Систем",
 				entityId: user._id,
 				details: {},
 			}
@@ -50,7 +52,7 @@ router.post("/login", async (req, res) => {
 	} catch {}
 
 	res.json({
-		message: req.t("auth.successfulLogin"),
+		message: "Успешна најава",
 		organization: {
 			id: user.organizationId._id,
 			name: user.organizationId.name,
@@ -66,10 +68,10 @@ router.get("/logout", async (req, res) => {
 			...cookieSettingsNoAge,
 		})
 
-		res.json({ message: req.t("auth.successfulLogout") }) // ✅
+		res.json({ message: "Успешна одјава" })
 	} catch (err) {
 		console.error("Logout error: " + err)
-		res.status(500).json({ error: req.t("auth.logoutFailed") }) // ✅
+		res.status(500).json({ error: "Грешка при одјава" })
 	}
 })
 
@@ -92,7 +94,7 @@ router.get("/me", async (req, res) => {
 	const token = req.cookies?.token
 
 	if (!token) {
-		return res.status(401).json({ error: req.t("auth.tokenNotProvided") }) // ✅
+		return res.status(401).json({ error: "Токенот не е испратен" })
 	}
 
 	try {
@@ -102,7 +104,7 @@ router.get("/me", async (req, res) => {
 			.populate("organizationId", "name slug timezone")
 
 		if (!user) {
-			return res.status(404).json({ error: req.t("auth.userNotFound") }) // ✅
+			return res.status(404).json({ error: "Корисникот не е пронајден" })
 		}
 
 		res.json({
@@ -116,7 +118,7 @@ router.get("/me", async (req, res) => {
 			},
 		})
 	} catch (err) {
-		return res.status(401).json({ error: req.t("auth.invalidToken") })
+		return res.status(401).json({ error: "Невалиден токен" })
 	}
 })
 

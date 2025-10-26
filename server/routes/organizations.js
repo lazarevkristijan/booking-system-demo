@@ -6,7 +6,7 @@ const User = require("../models/User.js")
 // Middleware for superadmin only
 const requireSuperAdmin = (req, res, next) => {
 	if (req.userRole !== "superadmin") {
-		return res.status(403).json({ error: req.t("errors.superadminOnly") })
+		return res.status(403).json({ error: "Само за супер администратори" })
 	}
 	next()
 }
@@ -32,7 +32,7 @@ router.get("/", requireSuperAdmin, async (req, res) => {
 		res.json(orgsWithCounts)
 	} catch (error) {
 		console.error("Error fetching organizations:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -44,34 +44,25 @@ router.get("/:id", requireSuperAdmin, async (req, res) => {
 		if (!organization) {
 			return res
 				.status(404)
-				.json({ error: req.t("errors.organizationNotFound") })
+				.json({ error: "Организацијата не е пронајдена" })
 		}
 
 		res.json(organization)
 	} catch (error) {
 		console.error("Error fetching organization:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
 // POST create organization (superadmin only)
 router.post("/", requireSuperAdmin, async (req, res) => {
 	try {
-		const { name, slug, timezone } = req.body
+		const { name, slug } = req.body
 
 		if (!name || !slug) {
 			return res
 				.status(400)
-				.json({ error: req.t("errors.nameAndSlugRequired") })
-		}
-
-		if (timezone) {
-			const validTimezones = Intl.supportedValuesOf("timeZone")
-			if (!validTimezones.includes(timezone)) {
-				return res.status(400).json({
-					error: "Invalid timezone provided",
-				})
-			}
+				.json({ error: "Името и скратеницата се задолжителни" })
 		}
 
 		// Check if slug already exists
@@ -81,21 +72,20 @@ router.post("/", requireSuperAdmin, async (req, res) => {
 		if (existing) {
 			return res
 				.status(400)
-				.json({ error: req.t("errors.organizationSlugExists") })
+				.json({ error: "Скратеницата на организацијата веќе постои" })
 		}
 
 		const organization = new Organization({
 			name: name.trim(),
 			slug: slug.toLowerCase().trim(),
 			isActive: true,
-			...(timezone && { timezone }),
 		})
 		await organization.save()
 
 		res.status(201).json(organization)
 	} catch (error) {
 		console.error("Error creating organization:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -103,21 +93,12 @@ router.post("/", requireSuperAdmin, async (req, res) => {
 router.put("/:id", requireSuperAdmin, async (req, res) => {
 	try {
 		const { id } = req.params
-		const { name, slug, isActive, timezone } = req.body
+		const { name, slug, isActive } = req.body
 
 		if (!name || !slug) {
 			return res
 				.status(400)
-				.json({ error: req.t("errors.nameAndSlugRequired") })
-		}
-
-		if (timezone) {
-			const validTimezones = Intl.supportedValuesOf("timeZone")
-			if (!validTimezones.includes(timezone)) {
-				return res.status(400).json({
-					error: "Invalid timezone provided",
-				})
-			}
+				.json({ error: "Името и скратеницата се задолжителни" })
 		}
 
 		// Check if slug is taken by another org
@@ -128,18 +109,13 @@ router.put("/:id", requireSuperAdmin, async (req, res) => {
 		if (existing) {
 			return res
 				.status(400)
-				.json({ error: req.t("errors.organizationSlugExists") })
+				.json({ error: "Скратеницата на организацијата веќе постои" })
 		}
 
 		const updateData = {
 			name: name.trim(),
 			slug: slug.toLowerCase().trim(),
 			isActive: isActive !== undefined ? isActive : true,
-		}
-
-		// Only update timezone if provided
-		if (timezone !== undefined) {
-			updateData.timezone = timezone
 		}
 
 		const organization = await Organization.findByIdAndUpdate(
@@ -151,13 +127,13 @@ router.put("/:id", requireSuperAdmin, async (req, res) => {
 		if (!organization) {
 			return res
 				.status(404)
-				.json({ error: req.t("errors.organizationNotFound") })
+				.json({ error: "Организацијата не е пронајдена" })
 		}
 
 		res.json(organization)
 	} catch (error) {
 		console.error("Error updating organization:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -165,17 +141,17 @@ router.put("/:id", requireSuperAdmin, async (req, res) => {
 router.patch("/:id/settings", async (req, res) => {
 	try {
 		const { id } = req.params
-		const { timezone, bookingInterval } = req.body
+		const { bookingInterval } = req.body
 
 		if (bookingInterval && ![15, 30].includes(bookingInterval)) {
 			return res.status(400).json({
-				error: "Invalid booking interval. Must be 15 or 30 minutes.",
+				error: "Невалиден интервал за часови. Треба да биде 15 или 30 минути.",
 			})
 		}
 
 		// Check if user is admin or superadmin
 		if (req.userRole !== "admin" && req.userRole !== "superadmin") {
-			return res.status(403).json({ error: req.t("errors.adminOnly") })
+			return res.status(403).json({ error: "Само за администратори" })
 		}
 
 		// Verify the organization ID matches the user's organization
@@ -184,25 +160,12 @@ router.patch("/:id/settings", async (req, res) => {
 			req.userRole !== "superadmin" &&
 			req.organizationId.toString() !== id
 		) {
-			return res
-				.status(403)
-				.json({ error: req.t("errors.cannotModifyOtherOrganization") })
-		}
-
-		// Validate timezone if provided
-		if (timezone) {
-			const validTimezones = Intl.supportedValuesOf("timeZone")
-			if (!validTimezones.includes(timezone)) {
-				return res.status(400).json({
-					error: "Invalid timezone provided",
-				})
-			}
+			return res.status(403).json({
+				error: "Не можете да менувате друга организација",
+			})
 		}
 
 		const updateData = {}
-		if (timezone !== undefined) {
-			updateData.timezone = timezone
-		}
 		if (bookingInterval !== undefined)
 			updateData.bookingInterval = bookingInterval
 
@@ -215,13 +178,13 @@ router.patch("/:id/settings", async (req, res) => {
 		if (!organization) {
 			return res
 				.status(404)
-				.json({ error: req.t("errors.organizationNotFound") })
+				.json({ error: "Организацијата не е пронајдена" })
 		}
 
 		res.json(organization)
 	} catch (error) {
 		console.error("Error updating organization settings:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -234,9 +197,7 @@ router.delete("/:id", requireSuperAdmin, async (req, res) => {
 		const userCount = await User.countDocuments({ organizationId: id })
 		if (userCount > 0) {
 			return res.status(400).json({
-				error: req.t("errors.organizationHasUsers", {
-					count: userCount,
-				}),
+				error: `Организацијата има ${userCount} корисници и не може да се избрише`,
 			})
 		}
 
@@ -245,13 +206,13 @@ router.delete("/:id", requireSuperAdmin, async (req, res) => {
 		if (!organization) {
 			return res
 				.status(404)
-				.json({ error: req.t("errors.organizationNotFound") })
+				.json({ error: "Организацијата не е пронајдена" })
 		}
 
-		res.json({ message: req.t("success.organizationDeleted") })
+		res.json({ message: "Организацијата е успешно избришана" })
 	} catch (error) {
 		console.error("Error deleting organization:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 

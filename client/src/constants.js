@@ -1,5 +1,4 @@
 import axios from "axios"
-import i18n from "./i18n/config"
 import {
 	Building2,
 	Calendar,
@@ -40,7 +39,7 @@ export const createErrorModal = (response) => {
 	const titleElem = document.createElement("h3")
 	titleElem.className =
 		"text-base sm:text-lg font-semibold text-red-600 font-poppins truncate"
-	titleElem.textContent = i18n.t("errors.errorTitle")
+	titleElem.textContent = "Грешка"
 
 	const closeBtn = document.createElement("button")
 	closeBtn.className =
@@ -63,7 +62,8 @@ export const createErrorModal = (response) => {
 
 	const infoElem = document.createElement("p")
 	infoElem.className = "text-slate-400 text-[12px] !mt-0"
-	infoElem.textContent = i18n.t("errors.contactAdmin")
+	infoElem.textContent =
+		"Доколку ја добивате оваа порака повеќе пати, контактирајте со администраторот"
 
 	content.appendChild(messageElem)
 	content.appendChild(infoElem)
@@ -76,7 +76,7 @@ export const createErrorModal = (response) => {
 	const closeFooterBtn = document.createElement("button")
 	closeFooterBtn.className =
 		"px-4 py-3 text-sm font-medium text-slate-700 bg-white border border-slateum text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 min-h-[44px]"
-	closeFooterBtn.textContent = i18n.t("errors.close")
+	closeFooterBtn.textContent = "Затвори"
 	closeFooterBtn.addEventListener("click", closeModal)
 
 	footer.appendChild(closeFooterBtn)
@@ -115,7 +115,7 @@ function getErrorMessage(error) {
 			const data = error.response.data
 
 			// Determine main message
-			let mainMessage = i18n.t("errors.generic")
+			let mainMessage = "Настана грешка"
 
 			if (typeof data?.error === "string") mainMessage = data.error
 			else if (typeof data?.message === "string")
@@ -128,9 +128,7 @@ function getErrorMessage(error) {
 
 			return `${mainMessage}\n\n${getRequestInfo(error)}`
 		} else if (error.request) {
-			return `${i18n.t("errors.networkError")}\n\n${getRequestInfo(
-				error
-			)}`
+			return `Нема одговор од серверот\n\n${getRequestInfo(error)}`
 		} else {
 			return error.message
 		}
@@ -140,7 +138,7 @@ function getErrorMessage(error) {
 	if (typeof error === "string") return error
 	if (typeof error === "object" && error !== null)
 		return JSON.stringify(error)
-	return i18n.t("errors.someProblemOccurred")
+	return "Се појави некаков проблем."
 }
 
 // MISC

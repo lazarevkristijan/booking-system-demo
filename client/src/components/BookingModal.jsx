@@ -20,7 +20,6 @@ import {
 	SERVER_API,
 } from "../constants"
 import { createErrorModal } from "../constants"
-import { useTranslation } from "react-i18next"
 import { useOrganization } from "../contexts/OrganizationContext"
 import { convertOrgTimezoneToUTC } from "../utils/timezone"
 
@@ -34,10 +33,9 @@ export const BookingModal = ({
 	editingBooking = null, // NEW
 	onBookingUpdated,
 }) => {
-	const { t } = useTranslation()
 	const { organization } = useOrganization()
-	const timezone = organization?.timezone || "UTC"
 	const bookingInterval = organization?.bookingInterval || 15
+	const timezone = organization?.timezone || "Europe/Skopje"
 
 	// Step state
 	const [currentStep, setCurrentStep] = useState(selectedEmployeeId ? 2 : 1)
@@ -382,7 +380,7 @@ export const BookingModal = ({
 		if (!selectedData.employee) {
 			createErrorModal({
 				data: {
-					error: t("bookings.errorSelectEmployee"),
+					error: "Ве молиме изберете вработен",
 				},
 			})
 			return
@@ -391,7 +389,7 @@ export const BookingModal = ({
 		if (selectedData.services.length === 0) {
 			createErrorModal({
 				data: {
-					error: t("bookings.errorSelectService"),
+					error: "Ве молиме изберете најмалку една услуга",
 				},
 			})
 			return
@@ -402,7 +400,7 @@ export const BookingModal = ({
 		) {
 			createErrorModal({
 				data: {
-					error: t("bookings.errorSelectClient"),
+					error: "Ве молиме изберете или креирајте клиент",
 				},
 			})
 			return
@@ -410,7 +408,7 @@ export const BookingModal = ({
 		if (!selectedDateTime) {
 			createErrorModal({
 				data: {
-					error: t("bookings.errorNoDateTime"),
+					error: "Ве молиме изберете датум и време",
 				},
 			})
 			return
@@ -421,7 +419,7 @@ export const BookingModal = ({
 		if (!dateTimeToUse) {
 			createErrorModal({
 				data: {
-					error: t("bookings.errorNoDateTime"),
+					error: "Ве молиме изберете датум и време",
 				},
 			})
 			return
@@ -441,7 +439,6 @@ export const BookingModal = ({
 			alignedStartTime.getTime() + totals.totalDuration * 60000
 		)
 
-		// Convert times from organization timezone to UTC before sending to backend
 		const startTimeUTC = convertOrgTimezoneToUTC(alignedStartTime, timezone)
 		const endTimeUTC = convertOrgTimezoneToUTC(endTime, timezone)
 
@@ -489,9 +486,9 @@ export const BookingModal = ({
 
 	// UI helpers
 	const steps = [
-		{ number: 1, title: t("bookings.stepEmployee"), icon: User },
-		{ number: 2, title: t("bookings.stepServices"), icon: Clock },
-		{ number: 3, title: t("bookings.stepClient"), icon: User },
+		{ number: 1, title: "Вработен", icon: User },
+		{ number: 2, title: "Услуги", icon: Clock },
+		{ number: 3, title: "Клиент", icon: User },
 	]
 
 	if (!isOpen) return null
@@ -512,8 +509,8 @@ export const BookingModal = ({
 						<div className="min-w-0 flex-1 mr-4">
 							<h3 className="text-base sm:text-lg font-semibold text-slate-800 font-poppins truncate">
 								{isEditMode
-									? t("bookings.editBooking")
-									: t("bookings.newBooking")}
+									? "Уреди Резервација"
+									: "Нова Резервација"}
 							</h3>
 							<p className="text-xs sm:text-sm text-slate-600 mt-1 truncate">
 								{(
@@ -525,7 +522,7 @@ export const BookingModal = ({
 											isEditMode
 												? editableDateTime
 												: selectedDateTime
-									  ).toLocaleString(t("common.locale"))
+									  ).toLocaleString("mk-MK")
 									: ""}
 							</p>
 						</div>
@@ -606,7 +603,7 @@ export const BookingModal = ({
 								{isEditMode && (
 									<div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
 										<label className="block text-sm font-medium text-slate-700 mb-2">
-											{t("bookings.selectNewDateTime")}
+											Избери Ново Време
 										</label>
 										<input
 											type="datetime-local"
@@ -622,24 +619,20 @@ export const BookingModal = ({
 											className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 										/>
 										<p className="text-xs text-slate-600 mt-2">
-											{t("bookings.originalTime")}:{" "}
+											Оригинално Време:{" "}
 											{new Date(
 												editingBooking.startTime
-											).toLocaleString(
-												t("common.locale")
-											)}
+											).toLocaleString("mk-MK")}
 										</p>
 									</div>
 								)}
 
 								<h4 className="text-base sm:text-lg font-medium text-slate-800 mb-4">
-									{t("bookings.selectAvailableEmployee")}
+									Избери Достапен Вработен
 								</h4>
 								<div className="grid gap-3">
 									{loadingEmployees ? (
-										<div>
-											{t("bookings.loadingEmployees")}
-										</div>
+										<div>Вчитување на вработени...</div>
 									) : (
 										localEmployees.map((employee) => (
 											<button
@@ -672,12 +665,8 @@ export const BookingModal = ({
 														}`}
 													>
 														{employee.available
-															? t(
-																	"bookings.available"
-															  )
-															: t(
-																	"bookings.busy"
-															  )}
+															? "Достапен"
+															: "Зафатен"}
 													</span>
 												</div>
 											</button>
@@ -691,14 +680,15 @@ export const BookingModal = ({
 						{currentStep === 2 && (
 							<div>
 								<h4 className="text-base sm:text-lg font-medium text-slate-800 mb-4">
-									{t("bookings.selectServicesTitle")}
+									Избери Услуги
 								</h4>
 								<p className="text-sm text-slate-600 mb-4">
-									{t("bookings.selectServicesSubtitle")}
+									Изберете една или повеќе услуги за овој
+									термин
 								</p>
 
 								{loadingServices ? (
-									<div>{t("bookings.loadingServices")}</div>
+									<div>Вчитување на услуги...</div>
 								) : (
 									<div className="grid gap-3">
 										{(servicesData || []).map((service) => {
@@ -765,9 +755,7 @@ export const BookingModal = ({
 																<span className="font-semibold text-slate-800 text-sm sm:text-base">
 																	{service.price ||
 																		0}{" "}
-																	{t(
-																		"common.currency"
-																	)}
+																	ден.
 																</span>
 															</div>
 															<div className="flex items-center text-xs sm:text-sm text-slate-500">
@@ -775,9 +763,7 @@ export const BookingModal = ({
 																{
 																	service.duration
 																}{" "}
-																{t(
-																	"common.minutes"
-																)}
+																минути
 															</div>
 														</div>
 													</div>
@@ -790,7 +776,7 @@ export const BookingModal = ({
 								{selectedData.services.length > 0 && (
 									<div className="mt-4 p-3 bg-slate-50 rounded-lg">
 										<div className="text-sm font-medium text-slate-700 mb-2">
-											{t("bookings.selectedServices")}
+											Избрани Услуги
 										</div>
 										<div className="flex flex-wrap gap-2">
 											{selectedData.services.map(
@@ -805,12 +791,9 @@ export const BookingModal = ({
 											)}
 										</div>
 										<div className="mt-2 text-sm text-slate-600">
-											{t("bookings.totalTime")}:{" "}
-											{totals.totalDuration}{" "}
-											{t("common.minutes")} •{" "}
-											{t("bookings.totalCost")}:{" "}
-											{totals.totalPrice.toFixed(2)}{" "}
-											{t("common.currency")}
+											Вкупно Време: {totals.totalDuration}{" "}
+											минути • Вкупна Цена:{" "}
+											{totals.totalPrice.toFixed(2)} ден.
 										</div>
 									</div>
 								)}
@@ -821,7 +804,7 @@ export const BookingModal = ({
 						{currentStep === 3 && (
 							<div>
 								<h4 className="text-base sm:text-lg font-medium text-slate-800 mb-4">
-									{t("bookings.clientInfo")}
+									Информации за Клиент
 								</h4>
 								<div className="space-y-4">
 									<div
@@ -829,7 +812,7 @@ export const BookingModal = ({
 										ref={suggestionsRef}
 									>
 										<label className="block text-sm font-medium text-slate-700 mb-2">
-											{t("clients.searchExisting")}
+											Пребарај Постоечки Клиент
 										</label>
 										<div className="relative">
 											<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -860,9 +843,7 @@ export const BookingModal = ({
 													)
 														setShowSuggestions(true)
 												}}
-												placeholder={t(
-													"common.enterName"
-												)}
+												placeholder="Внесете име"
 												className="w-full pl-10 pr-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent touch-manipulation"
 											/>
 										</div>
@@ -906,9 +887,7 @@ export const BookingModal = ({
 											<div className="flex items-center justify-between">
 												<div>
 													<div className="font-medium text-green-800">
-														{t(
-															"clients.selectedClient"
-														)}
+														Избран Клиент
 													</div>
 													<div>
 														<p>
@@ -956,9 +935,7 @@ export const BookingModal = ({
 												</div>
 												<div className="relative flex justify-center text-sm">
 													<span className="px-2 bg-white text-slate-500">
-														{t(
-															"clients.orCreateNew"
-														)}
+														или креирај нов
 													</span>
 												</div>
 											</div>
@@ -966,7 +943,7 @@ export const BookingModal = ({
 											<div className="grid grid-cols-1 gap-4">
 												<div>
 													<label className="block text-sm font-medium text-slate-700 mb-2">
-														{t("clients.fullName")}
+														Име и Презиме
 													</label>
 													<input
 														type="text"
@@ -989,16 +966,12 @@ export const BookingModal = ({
 															)
 														}
 														className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent touch-manipulation"
-														placeholder={t(
-															"common.enterName"
-														)}
+														placeholder="Внесете име"
 													/>
 												</div>
 												<div>
 													<label className="block text-sm font-medium text-slate-700 mb-2">
-														{t(
-															"clients.phoneNumber"
-														)}
+														Телефонски Број
 													</label>
 													<input
 														type="tel"
@@ -1021,9 +994,7 @@ export const BookingModal = ({
 															)
 														}
 														className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent touch-manipulation"
-														placeholder={t(
-															"common.enterPhone"
-														)}
+														placeholder="Внесете телефон"
 													/>
 												</div>
 											</div>
@@ -1036,14 +1007,14 @@ export const BookingModal = ({
 										</div>
 										<div className="relative flex justify-center text-sm">
 											<span className="px-2 bg-white text-slate-500">
-												{t("common.additional")}
+												Дополнително
 											</span>
 										</div>
 									</div>
 
 									<div>
 										<label className="block text-sm font-medium text-slate-700 mb-2">
-											{t("bookings.notes")}
+											Белешки
 										</label>
 										<textarea
 											value={selectedData.notes}
@@ -1055,9 +1026,7 @@ export const BookingModal = ({
 											}
 											maxLength={100}
 											className="w-full px-4 py-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent touch-manipulation resize-none"
-											placeholder={t(
-												"bookings.notesPlaceholder"
-											)}
+											placeholder="Внесете белешки (опционално)"
 										/>
 										<p className="text-right text-slate-500">
 											{selectedData?.notes?.length}
@@ -1103,10 +1072,8 @@ export const BookingModal = ({
 														: "bg-gray-700 hover:bg-gray-800"
 												}`}
 											>
-												{t("bookings.totalPrice")}:{" "}
-												{totals.totalPrice}{" "}
-												{t("common.currency")} |{" "}
-												{t("bookings.priceOverride")}
+												Вкупна Цена: {totals.totalPrice}{" "}
+												ден. | Промена на цена
 											</button>
 										</div>
 
@@ -1114,7 +1081,7 @@ export const BookingModal = ({
 											<div className="space-y-2">
 												<div>
 													<label className="text-xs text-gray-600">
-														{t("bookings.newPrice")}
+														Нова Цена
 													</label>
 													<input
 														type="number"
@@ -1147,9 +1114,7 @@ export const BookingModal = ({
 															)
 														}}
 														className="w-full border rounded px-2 py-1 text-sm"
-														placeholder={t(
-															"common.enterPrice"
-														)}
+														placeholder="Внесете цена"
 													/>
 												</div>
 											</div>
@@ -1168,7 +1133,7 @@ export const BookingModal = ({
 							className="inline-flex items-center px-4 py-3 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-h-[44px]"
 						>
 							<ChevronLeft className="h-4 w-4 mr-1" />
-							{t("common.back")}
+							Назад
 						</button>
 
 						<div className="flex gap-3">
@@ -1178,7 +1143,7 @@ export const BookingModal = ({
 									disabled={!canProceed()}
 									className="inline-flex items-center px-6 py-3 bg-slate-800 text-white text-sm font-medium rounded-lg hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation min-h-[44px]"
 								>
-									{t("common.forward")}
+									Напред
 									<ChevronRight className="h-4 w-4 ml-1" />
 								</button>
 							) : (
@@ -1193,8 +1158,8 @@ export const BookingModal = ({
 								>
 									{bookingMutation.isLoading ||
 									updateMutation.isLoading
-										? t("bookings.updateBooking")
-										: t("bookings.createBooking")}
+										? "Ажурирање..."
+										: "Креирај Резервација"}
 									<Check className="h-4 w-4 ml-1" />
 								</button>
 							)}

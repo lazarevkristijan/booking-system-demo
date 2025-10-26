@@ -15,7 +15,6 @@ import {
 	updateOrganization,
 	deleteOrganization,
 } from "../constants"
-import { COMMON_TIMEZONES } from "../utils/timezone"
 
 export const SuperAdminOrganizationsPage = () => {
 	const queryClient = useQueryClient()
@@ -25,7 +24,6 @@ export const SuperAdminOrganizationsPage = () => {
 		name: "",
 		slug: "",
 		isActive: true,
-		timezone: "Europe/Skopje",
 	})
 
 	const { data: organizations = [], isLoading } = useQuery({
@@ -63,7 +61,6 @@ export const SuperAdminOrganizationsPage = () => {
 			name: "",
 			slug: "",
 			isActive: true,
-			timezone: "Europe/Skopje",
 		})
 		setSelectedOrg(null)
 	}
@@ -79,7 +76,6 @@ export const SuperAdminOrganizationsPage = () => {
 			name: org.name,
 			slug: org.slug,
 			isActive: org.isActive,
-			timezone: org.timezone || "Europe/Skopje",
 		})
 		setShowModal(true)
 	}
@@ -275,35 +271,6 @@ export const SuperAdminOrganizationsPage = () => {
 									/>
 									<p className="text-xs text-slate-500 mt-1">
 										Само мали букви, бројки и цртички
-									</p>
-								</div>
-
-								<div>
-									<label className="block text-sm font-medium text-slate-700 mb-2">
-										Временска Зона *
-									</label>
-									<select
-										required
-										value={formData.timezone}
-										onChange={(e) =>
-											setFormData({
-												...formData,
-												timezone: e.target.value,
-											})
-										}
-										className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-									>
-										{COMMON_TIMEZONES.map((tz) => (
-											<option
-												key={tz.value}
-												value={tz.value}
-											>
-												{tz.label}
-											</option>
-										))}
-									</select>
-									<p className="text-xs text-slate-500 mt-1">
-										Временската зона за оваа организација
 									</p>
 								</div>
 

@@ -8,7 +8,7 @@ const bcrypt = require("bcrypt")
 const requireAdmin = (req, res, next) => {
 	if (req.userRole !== "admin") {
 		return res.status(403).json({
-			error: req.t("errors.adminOnly"),
+			error: "Само за администратори",
 		})
 	}
 	next()
@@ -27,7 +27,7 @@ router.get("/", requireAdmin, async (req, res) => {
 		res.json(users)
 	} catch (error) {
 		console.error("Error fetching users:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -42,13 +42,13 @@ router.get("/:id", requireAdmin, async (req, res) => {
 			.populate("organizationId", "name slug")
 
 		if (!user) {
-			return res.status(404).json({ error: req.t("errors.userNotFound") })
+			return res.status(404).json({ error: "Корисникот не е пронајден" })
 		}
 
 		res.json(user)
 	} catch (error) {
 		console.error("Error fetching user:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -61,17 +61,17 @@ router.post("/", requireAdmin, async (req, res) => {
 		// Validation
 		if (!username || username.trim() === "") {
 			return res.status(400).json({
-				error: req.t("validation.usernameRequired"),
+				error: "Корисничко име е задолжително",
 			})
 		}
 		if (!password || password.length < 4) {
 			return res.status(400).json({
-				error: req.t("validation.passwordMinLength"),
+				error: "Лозинката мора да има најмалку 4 знаци",
 			})
 		}
 		if (role && !["admin", "user"].includes(role)) {
 			return res.status(400).json({
-				error: req.t("validation.invalidRole"),
+				error: "Невалидна улога",
 			})
 		}
 
@@ -79,7 +79,7 @@ router.post("/", requireAdmin, async (req, res) => {
 		const existingUser = await User.findOne({ username: username.trim() })
 		if (existingUser) {
 			return res.status(400).json({
-				error: req.t("errors.usernameExists"),
+				error: "Корисничкото име веќе постои",
 			})
 		}
 
@@ -97,12 +97,10 @@ router.post("/", requireAdmin, async (req, res) => {
 
 		try {
 			await logAction(req, {
-				action: req.t("actions.create"),
-				entityType: req.t("entities.user"),
+				action: "Креирање",
+				entityType: "Корисник",
 				entityId: user._id,
-				details: `${req.t("entities.user")}: ${user.username}, ${req.t(
-					"entities.role"
-				)}: ${user.role}`,
+				details: `Корисник: ${user.username}, Улога: ${user.role}`,
 			})
 		} catch {}
 
@@ -113,7 +111,7 @@ router.post("/", requireAdmin, async (req, res) => {
 		res.status(201).json(userResponse)
 	} catch (error) {
 		console.error("Error creating user:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -126,12 +124,12 @@ router.put("/:id", requireAdmin, async (req, res) => {
 		// Validation
 		if (!username || username.trim() === "") {
 			return res.status(400).json({
-				error: req.t("validation.usernameRequired"),
+				error: "Корисничко име е задолжително",
 			})
 		}
 		if (role && !["admin", "user"].includes(role)) {
 			return res.status(400).json({
-				error: req.t("validation.invalidRole"),
+				error: "Невалидна улога",
 			})
 		}
 
@@ -142,7 +140,7 @@ router.put("/:id", requireAdmin, async (req, res) => {
 		})
 
 		if (!existingUser) {
-			return res.status(404).json({ error: req.t("errors.userNotFound") })
+			return res.status(404).json({ error: "Корисникот не е пронајден" })
 		}
 
 		// Check if username is taken by another user
@@ -153,7 +151,7 @@ router.put("/:id", requireAdmin, async (req, res) => {
 			})
 			if (duplicateUser) {
 				return res.status(400).json({
-					error: req.t("errors.usernameExists"),
+					error: "Корисничкото име веќе постои",
 				})
 			}
 		}
@@ -177,21 +175,17 @@ router.put("/:id", requireAdmin, async (req, res) => {
 
 		try {
 			await logAction(req, {
-				action: req.t("actions.update"),
-				entityType: req.t("entities.user"),
+				action: "Ажурирање",
+				entityType: "Корисник",
 				entityId: user._id,
-				details: `${req.t("entities.user")}: ${
-					existingUser.username
-				}->${user.username}, ${req.t("entities.role")}: ${
-					existingUser.role
-				}->${user.role}`,
+				details: `Корисник: ${existingUser.username}->${user.username}, Улога: ${existingUser.role}->${user.role}`,
 			})
 		} catch {}
 
 		res.json(user)
 	} catch (error) {
 		console.error("Error updating user:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 
@@ -203,7 +197,7 @@ router.delete("/:id", requireAdmin, async (req, res) => {
 		// Prevent self-deletion
 		if (id === req.userId.toString()) {
 			return res.status(400).json({
-				error: req.t("errors.cannotDeleteSelf"),
+				error: "Не можете да се избришете себеси",
 			})
 		}
 
@@ -213,24 +207,24 @@ router.delete("/:id", requireAdmin, async (req, res) => {
 		})
 
 		if (!user) {
-			return res.status(404).json({ error: req.t("errors.userNotFound") })
+			return res.status(404).json({ error: "Корисникот не е пронајден" })
 		}
 
 		await User.findByIdAndDelete(id)
 
 		try {
 			await logAction(req, {
-				action: req.t("actions.delete"),
-				entityType: req.t("entities.user"),
+				action: "Бришење",
+				entityType: "Корисник",
 				entityId: id,
-				details: `${req.t("entities.user")}: ${user.username}`,
+				details: `Корисник: ${user.username}`,
 			})
 		} catch {}
 
-		res.json({ message: req.t("success.userDeleted") })
+		res.json({ message: "Корисникот е успешно избришан" })
 	} catch (error) {
 		console.error("Error deleting user:", error)
-		res.status(500).json({ error: req.t("errors.serverError") })
+		res.status(500).json({ error: "Грешка во серверот" })
 	}
 })
 

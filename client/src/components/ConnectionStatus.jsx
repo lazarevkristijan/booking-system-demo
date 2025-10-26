@@ -33,12 +33,7 @@ export const ConnectionStatus = () => {
 				isOnline ? "bg-green-500" : "bg-red-500"
 			} text-white transition-all`}
 		>
-			{isOnline ? (
-				<>
-					<Wifi className="h-5 w-5" />
-					<span>Поврзано</span>
-				</>
-			) : (
+			{!isOnline && (
 				<>
 					<WifiOff className="h-5 w-5" />
 					<span>Нема интернет врска</span>
