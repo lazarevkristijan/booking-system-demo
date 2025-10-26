@@ -56,16 +56,31 @@ export const createErrorModal = (response) => {
 	content.className =
 		"px-4 sm:px-6 py-6 max-h-[60vh] sm:max-h-none overflow-y-auto space-y-4"
 
+	// Get error details
+	const errorDetails = getErrorMessage(response)
+	const parts = errorDetails.split("\n\n") // Split on double newline
+	const mainMessage = parts[0] || "Настана грешка"
+	const requestInfo = parts[1] || "" // Status codes and URL
+
 	const messageElem = document.createElement("p")
 	messageElem.className = "text-slate-700"
-	messageElem.textContent = getErrorMessage(response)
+	messageElem.textContent = mainMessage
+
+	content.appendChild(messageElem)
+
+	// Request info (status, method, URL) - only if exists
+	if (requestInfo) {
+		const requestInfoElem = document.createElement("p")
+		requestInfoElem.className = "text-slate-500 text-sm font-mono"
+		requestInfoElem.textContent = requestInfo
+		content.appendChild(requestInfoElem)
+	}
 
 	const infoElem = document.createElement("p")
-	infoElem.className = "text-slate-400 text-[12px] !mt-0"
+	infoElem.className = "text-slate-400 text-[12px] !mt-4"
 	infoElem.textContent =
 		"Доколку ја добивате оваа порака повеќе пати, контактирајте со администраторот"
 
-	content.appendChild(messageElem)
 	content.appendChild(infoElem)
 
 	// Footer
