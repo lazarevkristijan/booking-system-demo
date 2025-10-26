@@ -20,7 +20,7 @@ const organizationSchema = new mongoose.Schema(
 		},
 		timezone: {
 			type: String,
-			default: "UTC",
+			default: "Europe/Skopje",
 			required: true,
 			trim: true,
 		},

@@ -57,12 +57,21 @@ router.get("/:id", requireSuperAdmin, async (req, res) => {
 // POST create organization (superadmin only)
 router.post("/", requireSuperAdmin, async (req, res) => {
 	try {
-		const { name, slug } = req.body
+		const { name, slug, timezone } = req.body
 
 		if (!name || !slug) {
 			return res
 				.status(400)
 				.json({ error: req.t("errors.nameAndSlugRequired") })
+		}
+
+		if (timezone) {
+			const validTimezones = Intl.supportedValuesOf("timeZone")
+			if (!validTimezones.includes(timezone)) {
+				return res.status(400).json({
+					error: "Invalid timezone provided",
+				})
+			}
 		}
 
 		// Check if slug already exists
@@ -79,6 +88,7 @@ router.post("/", requireSuperAdmin, async (req, res) => {
 			name: name.trim(),
 			slug: slug.toLowerCase().trim(),
 			isActive: true,
+			...(timezone && { timezone }),
 		})
 		await organization.save()
 
