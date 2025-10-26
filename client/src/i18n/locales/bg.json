@@ -59,7 +59,8 @@
 		"organizationDeactivated": "Организацията е деактивирана",
 		"tokenNotProvided": "Не е предоставен токен",
 		"userNotFound": "Потребителят не е намерен",
-		"invalidToken": "Невалиден токен"
+		"invalidToken": "Невалиден токен",
+		"useDemoCredentials": "Използвайте демо данни за влизане"
 	},
 
 	"navigation": {

@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Navigate } from "react-router-dom"
-import { Eye, EyeOff, LogIn } from "lucide-react"
+import { Eye, EyeOff, Info, LogIn } from "lucide-react"
 import axios from "axios"
 import { useTranslation } from "react-i18next"
 axios.defaults.withCredentials = true
@@ -51,6 +51,11 @@ const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
 		)
 	}
 
+	const fillDemoCredentials = () => {
+		setUsername("test1")
+		setPassword("4444")
+	}
+
 	return (
 		<div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
 			<div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
@@ -65,6 +70,17 @@ const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
 						{t("auth.loginSubtitle")}
 					</p>
 				</div>
+
+				{/* Demo Credentials Button */}
+				<button
+					type="button"
+					onClick={fillDemoCredentials}
+					className="mb-6 w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-50 border-2 border-blue-200 text-blue-700 font-medium rounded-lg hover:bg-blue-100 hover:border-blue-300 transition-colors"
+				>
+					<Info className="h-5 w-5" />
+					{t("auth.useDemoCredentials")}
+				</button>
+
 				<form
 					onSubmit={handleSubmit}
 					className="space-y-6"

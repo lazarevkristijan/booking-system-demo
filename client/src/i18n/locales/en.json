@@ -59,7 +59,8 @@
 		"organizationDeactivated": "Organization is deactivated",
 		"tokenNotProvided": "Token not provided",
 		"userNotFound": "User not found",
-		"invalidToken": "Invalid token"
+		"invalidToken": "Invalid token",
+		"useDemoCredentials": "Use demo credentials"
 	},
 
 	"navigation": {
