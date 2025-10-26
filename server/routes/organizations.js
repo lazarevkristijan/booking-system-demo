@@ -165,7 +165,13 @@ router.put("/:id", requireSuperAdmin, async (req, res) => {
 router.patch("/:id/settings", async (req, res) => {
 	try {
 		const { id } = req.params
-		const { timezone } = req.body
+		const { timezone, bookingInterval } = req.body
+
+		if (bookingInterval && ![15, 30].includes(bookingInterval)) {
+			return res.status(400).json({
+				error: "Invalid booking interval. Must be 15 or 30 minutes.",
+			})
+		}
 
 		// Check if user is admin or superadmin
 		if (req.userRole !== "admin" && req.userRole !== "superadmin") {
@@ -197,6 +203,8 @@ router.patch("/:id/settings", async (req, res) => {
 		if (timezone !== undefined) {
 			updateData.timezone = timezone
 		}
+		if (bookingInterval !== undefined)
+			updateData.bookingInterval = bookingInterval
 
 		const organization = await Organization.findByIdAndUpdate(
 			id,

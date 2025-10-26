@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
 	X,
 	ChevronLeft,
@@ -37,6 +37,7 @@ export const BookingModal = ({
 	const { t } = useTranslation()
 	const { organization } = useOrganization()
 	const timezone = organization?.timezone || "UTC"
+	const bookingInterval = organization?.bookingInterval || 15
 
 	// Step state
 	const [currentStep, setCurrentStep] = useState(selectedEmployeeId ? 2 : 1)
@@ -184,15 +185,6 @@ export const BookingModal = ({
 		}
 	}, [employeesData])
 
-	// Align to 30-minute slots helper
-	const alignToThirtyMinutes = (date) => {
-		if (!date) return null
-		const aligned = new Date(date)
-		const minutes = aligned.getMinutes()
-		const alignedMinutes = minutes < 30 ? 0 : 30
-		aligned.setMinutes(alignedMinutes, 0, 0)
-		return aligned
-	}
 	const formatDateTimeLocal = (date) => {
 		if (!date) return ""
 		const d = new Date(date)
@@ -203,6 +195,20 @@ export const BookingModal = ({
 		const minutes = String(d.getMinutes()).padStart(2, "0")
 		return `${year}-${month}-${day}T${hours}:${minutes}`
 	}
+	const alignToBookingInterval = useCallback(
+		(date) => {
+			if (!date) return null
+			const aligned = new Date(date)
+			const minutes = aligned.getMinutes()
+
+			// Align to nearest interval (floor)
+			const alignedMinutes =
+				Math.floor(minutes / bookingInterval) * bookingInterval
+			aligned.setMinutes(alignedMinutes, 0, 0)
+			return aligned
+		},
+		[bookingInterval]
+	)
 
 	// Compute total duration & price from selected services (memoized)
 	const totals = useMemo(() => {
@@ -225,8 +231,8 @@ export const BookingModal = ({
 		if (!dateToCheck || !employeesData || employeesData.length === 0) return
 
 		const bookingDuration =
-			totals.totalDuration > 0 ? totals.totalDuration : 30
-		const startTime = alignToThirtyMinutes(dateToCheck)
+			totals.totalDuration > 0 ? totals.totalDuration : bookingInterval
+		const startTime = alignToBookingInterval(dateToCheck)
 		const endTime = new Date(startTime.getTime() + bookingDuration * 60000)
 
 		const updated = employeesData.map((emp) => {
@@ -430,7 +436,7 @@ export const BookingModal = ({
 			clientId = res._id
 		}
 
-		const alignedStartTime = alignToThirtyMinutes(dateTimeToUse)
+		const alignedStartTime = alignToBookingInterval(dateTimeToUse)
 		const endTime = new Date(
 			alignedStartTime.getTime() + totals.totalDuration * 60000
 		)
@@ -515,7 +521,7 @@ export const BookingModal = ({
 										? editableDateTime
 										: selectedDateTime
 								)
-									? alignToThirtyMinutes(
+									? alignToBookingInterval(
 											isEditMode
 												? editableDateTime
 												: selectedDateTime

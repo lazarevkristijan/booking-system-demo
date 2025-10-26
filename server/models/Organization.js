@@ -24,6 +24,12 @@ const organizationSchema = new mongoose.Schema(
 			required: true,
 			trim: true,
 		},
+		bookingInterval: {
+			type: Number,
+			enum: [15, 30],
+			default: 15,
+			required: true,
+		},
 	},
 	{
 		timestamps: true,

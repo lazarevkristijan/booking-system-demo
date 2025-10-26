@@ -14,9 +14,11 @@ import { getBookings, getEmployees } from "../constants"
 import { useQuery } from "@tanstack/react-query"
 import BookingDetailsModal from "../components/BookingDetailsModal"
 import { useTranslation } from "react-i18next"
+import { useOrganization } from "../contexts/OrganizationContext"
 
 export const DashboardPage = () => {
 	const { t } = useTranslation()
+	const { organization } = useOrganization()
 	const [selectedDate, setSelectedDate] = useState(new Date())
 	const [showBookingModal, setShowBookingModal] = useState(false)
 	const [selectedDateTime, setSelectedDateTime] = useState(null)
@@ -29,6 +31,8 @@ export const DashboardPage = () => {
 
 	const [viewMode, setViewMode] = useState("month")
 	const [selectedEmployeeId, setSelectedEmployeeId] = useState(null)
+
+	const bookingInterval = organization?.bookingInterval || 15
 
 	const formatDateMK = (date, options = {}) => {
 		const day = date.getDate()
@@ -147,11 +151,22 @@ export const DashboardPage = () => {
 		setShowEditBookingModal(true)
 	}, [])
 
-	const timeSlots = Array.from({ length: 25 }, (_, i) => {
-		const hour = Math.floor(8 + i / 2)
-		const minute = (i % 2) * 30
-		return `${hour}:${minute.toString().padStart(2, "0")}`
-	})
+	const timeSlots = useMemo(() => {
+		const slots = []
+		const startHour = 8
+		const endHour = 20 // 8 PM
+		const totalMinutes = (endHour - startHour) * 60
+		const slotCount = totalMinutes / bookingInterval
+
+		for (let i = 0; i < slotCount; i++) {
+			const totalMins = startHour * 60 + i * bookingInterval
+			const hour = Math.floor(totalMins / 60)
+			const minute = totalMins % 60
+			slots.push(`${hour}:${minute.toString().padStart(2, "0")}`)
+		}
+
+		return slots
+	}, [bookingInterval])
 
 	const getWeekDays = (date) => {
 		const week = []
@@ -209,7 +224,7 @@ export const DashboardPage = () => {
 			const slotStart = new Date(day)
 			slotStart.setHours(hour, minute, 0, 0)
 			const slotEnd = new Date(day)
-			slotEnd.setHours(hour, minute + 29, 59, 999)
+			slotEnd.setHours(hour, minute + bookingInterval - 1, 59, 999)
 
 			return bookings.filter((booking) => {
 				const bookingDate = new Date(booking.startTime)
@@ -220,7 +235,7 @@ export const DashboardPage = () => {
 				return timeMatch && employeeMatch
 			})
 		},
-		[bookings]
+		[bookings, bookingInterval]
 	)
 
 	const handleTimeSlotClick = (day, timeSlot, employeeId = null) => {

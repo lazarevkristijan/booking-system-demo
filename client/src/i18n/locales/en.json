@@ -354,7 +354,11 @@
 		"currentTimezone": "Current Timezone",
 		"timezoneNote": "Changing the timezone will affect how all dates and times are displayed throughout the application.",
 		"saveSuccess": "Settings saved successfully!",
-		"saveError": "Failed to save settings. Please try again."
+		"saveError": "Failed to save settings. Please try again.",
+		"bookingInterval": "Booking Time Interval",
+		"bookingIntervalDescription": "Set the time interval for booking slots in the calendar",
+		"selectBookingInterval": "Select booking interval",
+		"currentInterval": "Current interval"
 	},
 
 	"errorBoundary": {

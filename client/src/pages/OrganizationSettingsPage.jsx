@@ -11,12 +11,16 @@ export const OrganizationSettingsPage = () => {
 	const { t } = useTranslation()
 	const { organization, refreshOrganization } = useOrganization()
 	const [timezone, setTimezone] = useState("UTC")
+	const [bookingInterval, setBookingInterval] = useState(15)
 	const [saving, setSaving] = useState(false)
 	const [message, setMessage] = useState(null)
 
 	useEffect(() => {
 		if (organization?.timezone) {
 			setTimezone(organization.timezone)
+		}
+		if (organization?.bookingInterval) {
+			setBookingInterval(organization.bookingInterval)
 		}
 	}, [organization])
 
@@ -31,6 +35,7 @@ export const OrganizationSettingsPage = () => {
 				`${SERVER_API}/organizations/${organization.id}/settings`,
 				{
 					timezone,
+					bookingInterval,
 				},
 				{ withCredentials: true }
 			)
@@ -102,6 +107,59 @@ export const OrganizationSettingsPage = () => {
 						</div>
 					</div>
 
+					{/* NEW: Booking Interval Section */}
+					<div className="mb-6 border-t pt-6">
+						<h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+							<Clock className="h-5 w-5 mr-2 text-green-600" />
+							{t("settings.bookingInterval")}
+						</h2>
+						<p className="text-sm text-slate-600 mb-4">
+							{t("settings.bookingIntervalDescription")}
+						</p>
+
+						<label className="block text-sm font-medium text-slate-700 mb-2">
+							{t("settings.selectBookingInterval")}
+						</label>
+						<div className="flex gap-4">
+							<button
+								onClick={() => setBookingInterval(15)}
+								className={`flex-1 px-6 py-4 rounded-lg border-2 transition-all ${
+									bookingInterval === 15
+										? "border-green-600 bg-green-50 text-green-700"
+										: "border-slate-300 hover:border-slate-400"
+								}`}
+							>
+								<div className="text-2xl font-bold">15</div>
+								<div className="text-sm">
+									{t("common.minutes")}
+								</div>
+							</button>
+							<button
+								onClick={() => setBookingInterval(30)}
+								className={`flex-1 px-6 py-4 rounded-lg border-2 transition-all ${
+									bookingInterval === 30
+										? "border-green-600 bg-green-50 text-green-700"
+										: "border-slate-300 hover:border-slate-400"
+								}`}
+							>
+								<div className="text-2xl font-bold">30</div>
+								<div className="text-sm">
+									{t("common.minutes")}
+								</div>
+							</button>
+						</div>
+
+						<div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+							<p className="text-sm text-green-800">
+								<strong>
+									{t("settings.currentInterval")}:
+								</strong>{" "}
+								{organization?.bookingInterval || 15}{" "}
+								{t("common.minutes")}
+							</p>
+						</div>
+					</div>
+
 					{message && (
 						<div
 							className={`mb-4 p-4 rounded-lg ${
@@ -116,7 +174,12 @@ export const OrganizationSettingsPage = () => {
 
 					<button
 						onClick={handleSave}
-						disabled={saving || timezone === organization?.timezone}
+						disabled={
+							saving ||
+							(timezone === organization?.timezone &&
+								bookingInterval ===
+									organization?.bookingInterval)
+						}
 						className="flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
 					>
 						<Save className="h-5 w-5 mr-2" />
