@@ -140,7 +140,16 @@ const LoginPageComponent = ({ isAuthenticated, setIsAuthenticated }) => {
 					</button>
 				</form>
 				<div className="mt-8 text-center text-xs text-slate-400">
-					<span>© 2025 MS Studio</span>
+					<span>© 2025 Дигитермин</span>
+					<span className="mx-2">•</span>
+					<a
+						href="https://digitermin.com"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="hover:text-slate-600 transition-colors underline"
+					>
+						Посети го вебсајтот
+					</a>
 				</div>
 			</div>
 		</div>
