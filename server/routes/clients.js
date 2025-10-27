@@ -225,6 +225,104 @@ router.post("/", async (req, res) => {
 	}
 })
 
+// POST /api/clients/bulk - Bulk import clients
+router.post("/bulk", async (req, res) => {
+	try {
+		const { clients: clientsToImport } = req.body
+
+		if (!Array.isArray(clientsToImport) || clientsToImport.length === 0) {
+			return res
+				.status(400)
+				.json({ error: "Листата на клиенти е задолжителна" })
+		}
+
+		const organizationId = req.organizationId
+		if (!organizationId) {
+			return res.status(400).json({
+				error: "Идентификатор на организација е задолжителен",
+			})
+		}
+
+		const results = {
+			success: [],
+			errors: [],
+		}
+
+		for (const clientData of clientsToImport) {
+			const { full_name, phone, notes } = clientData
+
+			// Validation
+			if (!full_name || full_name.trim() === "") {
+				results.errors.push({
+					client: clientData,
+					error: "Името е задолжително",
+				})
+				continue
+			}
+
+			const cleanedPhone = phone?.trim().replace(/\s/g, "") || ""
+
+			if (!cleanedPhone || cleanedPhone === "" || isNaN(cleanedPhone)) {
+				results.errors.push({
+					client: clientData,
+					error: "Невалиден телефонски број",
+				})
+				continue
+			}
+
+			// Check for duplicate
+			const existingClient = await Client.findOne({
+				phone: cleanedPhone,
+				organizationId,
+			})
+			if (existingClient) {
+				results.errors.push({
+					client: clientData,
+					error: "Веќе постои",
+				})
+				continue
+			}
+
+			try {
+				const client = new Client({
+					full_name: full_name.trim(),
+					phone: cleanedPhone,
+					notes: notes || "",
+					organizationId,
+				})
+
+				await client.save()
+				results.success.push(client)
+
+				// Log action
+				try {
+					await logAction(req, {
+						action: "Креирање (Bulk)",
+						entityType: "Клиент",
+						entityId: client._id,
+						details: `Име: ${client.full_name}, Телефон: ${client.phone}`,
+					})
+				} catch {}
+			} catch (error) {
+				results.errors.push({
+					client: clientData,
+					error: error.message,
+				})
+			}
+		}
+
+		res.json({
+			successCount: results.success.length,
+			errorCount: results.errors.length,
+			success: results.success,
+			errors: results.errors,
+		})
+	} catch (error) {
+		console.error("Error bulk importing clients:", error)
+		res.status(500).json({ error: "Грешка во серверот" })
+	}
+})
+
 // PUT /api/clients/:id - Update client
 router.put("/:id", async (req, res) => {
 	try {

@@ -10,6 +10,7 @@ import {
 	getSingleClientHistory,
 	patchEditClient,
 	postNewClientFromPage,
+	postBulkImportClients,
 } from "../constants"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 
@@ -137,6 +138,125 @@ export const ClientsPage = () => {
 
 		return `${day} ${month} ${year}, ${hours}:${minutes}`
 	}
+	const handleImportContact = async () => {
+		// Check if Contact Picker API is supported
+		if (!("contacts" in navigator && "ContactsManager" in window)) {
+			alert(
+				"Вашиот пребарувач не поддржува импортирање на контакти. Ве молиме користете Chrome на Android или Safari на iOS."
+			)
+			return
+		}
+
+		try {
+			const props = ["name", "tel"]
+			const opts = { multiple: true } // Allow multiple contacts
+
+			const contacts = await navigator.contacts.select(props, opts)
+
+			if (contacts.length === 0) {
+				return // User cancelled
+			}
+
+			// If single contact, auto-fill the form
+			if (contacts.length === 1) {
+				const contact = contacts[0]
+				const name = contact.name?.[0] || ""
+				const phone = contact.tel?.[0] || ""
+
+				setFormData({
+					...formData,
+					full_name: name,
+					phone: phone,
+				})
+				return
+			}
+
+			// If multiple contacts, batch import
+			if (
+				window.confirm(
+					`Дали сакате да импортирате ${contacts.length} контакти?`
+				)
+			) {
+				await batchImportContacts(contacts)
+			}
+		} catch (error) {
+			if (error.name === "InvalidStateError") {
+				alert("Ве молиме дозволете пристап до контактите.")
+			} else {
+				console.error("Error importing contacts:", error)
+				alert("Грешка при импорт на контакти")
+			}
+		}
+	}
+
+	const batchImportContacts = async (contacts) => {
+		// Prepare the data for bulk import
+		const clientsData = contacts
+			.map((contact) => {
+				const name = contact.name?.[0] || ""
+				const phone = contact.tel?.[0]?.replace(/[^0-9+]/g, "") || ""
+
+				if (!name || !phone) {
+					return null
+				}
+
+				return {
+					full_name: name,
+					phone: phone,
+					notes: "",
+				}
+			})
+			.filter((client) => client !== null) // Remove invalid entries
+
+		if (clientsData.length === 0) {
+			alert("Нема валидни контакти за импортирање")
+			return
+		}
+
+		try {
+			// Call the bulk import API
+			const result = await postBulkImportClients(clientsData)
+
+			// Refresh the client list
+			queryClient.invalidateQueries(["clients_paginated"])
+			queryClient.invalidateQueries(["clients"])
+
+			// Show results
+			let message = `✅ Успешно увезени: ${result.successCount} контакти`
+
+			if (result.errorCount > 0) {
+				message += `\n❌ Грешки: ${result.errorCount}`
+
+				// Show first 5 errors
+				if (result.errors && result.errors.length > 0) {
+					const errorMessages = result.errors
+						.slice(0, 5)
+						.map(
+							(err) =>
+								`${err.client.full_name || "Unknown"}: ${
+									err.error
+								}`
+						)
+					message += "\n\n" + errorMessages.join("\n")
+
+					if (result.errors.length > 5) {
+						message += `\n... и уште ${
+							result.errors.length - 5
+						} грешки`
+					}
+				}
+			}
+
+			alert(message)
+			setShowModal(false)
+		} catch (error) {
+			console.error("Error bulk importing clients:", error)
+			alert(
+				"Грешка при импорт на контакти: " +
+					(error.response?.data?.error || error.message)
+			)
+		}
+	}
 
 	return (
 		<div className="p-4 sm:p-6">
@@ -149,6 +269,29 @@ export const ClientsPage = () => {
 					<p className="text-slate-600 mt-1 text-sm sm:text-base">
 						Управување со вашите клиенти
 					</p>
+				</div>
+				<div>
+					<button
+						type="button"
+						onClick={handleImportContact}
+						className="px-4 py-3 text-sm font-medium text-slate-700 bg-slate-50 border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							className="h-5 w-5"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+							/>
+						</svg>
+						Импорт на клиенти
+					</button>
 				</div>
 
 				{/* CrudTable with server-side pagination */}

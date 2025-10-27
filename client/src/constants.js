@@ -447,6 +447,18 @@ export const postNewClientFromPage = async (formData, clients, onSuccess) => {
 		})
 }
 
+export const postBulkImportClients = async (clientsData) => {
+	try {
+		const response = await axios.post(`${SERVER_API}/clients/bulk`, {
+			clients: clientsData,
+		})
+		return response.data
+	} catch (error) {
+		console.error("Error bulk importing clients:", error)
+		throw error
+	}
+}
+
 // BOOKINGS
 export const getBookings = async (month, year) => {
 	const params = new URLSearchParams()
