@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { CrudTable } from "../components/CrudTable"
-import { X, Calendar } from "lucide-react"
+import { X, Calendar, Info } from "lucide-react"
 import axios from "axios"
 axios.defaults.withCredentials = true
 import {
@@ -30,6 +30,8 @@ export const ClientsPage = () => {
 		phone: "",
 		notes: "",
 	})
+
+	const [showImportInfo, setShowImportInfo] = useState(false)
 
 	// Fetch clients with pagination and search
 	const { data, isFetching } = useQuery({
@@ -270,7 +272,7 @@ export const ClientsPage = () => {
 						Управување со вашите клиенти
 					</p>
 				</div>
-				<div>
+				<div className="flex">
 					<button
 						type="button"
 						onClick={handleImportContact}
@@ -292,8 +294,129 @@ export const ClientsPage = () => {
 						</svg>
 						Импорт на клиенти
 					</button>
+					{/* Expandable info */}
+					<button
+						type="button"
+						onClick={() => setShowImportInfo(!showImportInfo)}
+						className="px-4 py-3 text-sm font-medium text-slate-700 bg-slate-50 border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
+					>
+						<Info className="h-4 w-4" />
+						{showImportInfo ? "Сокриј" : "Инструкции"}
+					</button>
 				</div>
 
+				<div>
+					{showImportInfo && (
+						<div className="mt-3 p-5 bg-gradient-to-br from-blue-50 via-slate-50 to-indigo-50 border-2 border-blue-200 rounded-xl shadow-sm text-slate-700">
+							<div className="flex items-start gap-3 mb-3">
+								<div className="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white">
+									<span className="text-lg">⚙️</span>
+								</div>
+								<div>
+									<p className="font-semibold text-base text-slate-800 mb-1">
+										Брза напомена
+									</p>
+									<p className="text-sm leading-relaxed">
+										Пред да започнете со развој и тестирање
+										со{" "}
+										<span className="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 rounded font-semibold text-xs">
+											Contact Picker API
+										</span>
+										, потребно е да ја овозможите поддршката
+										за оваа функција на вашиот уред.
+									</p>
+								</div>
+							</div>
+
+							<div className="mt-4 space-y-3">
+								{/* Android Section */}
+								<div className="flex items-start gap-2.5 p-3 bg-white/70 rounded-lg border border-slate-200">
+									<span className="flex-shrink-0 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+										✓
+									</span>
+									<p className="text-sm leading-relaxed">
+										<span className="font-semibold text-slate-800">
+											На Android:
+										</span>{" "}
+										оваа функција е достапна во Chrome 80
+										(на Android M или понов) стандардно.
+									</p>
+								</div>
+
+								{/* iOS Section */}
+								<div className="p-4 bg-white/70 rounded-lg border border-amber-200">
+									<div className="flex items-start gap-2.5 mb-3">
+										<span className="flex-shrink-0 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+											!
+										</span>
+										<p className="text-sm leading-relaxed">
+											<span className="font-semibold text-slate-800">
+												На iOS:
+											</span>{" "}
+											<span className="inline-block px-2 py-0.5 bg-amber-100 text-amber-700 rounded font-semibold text-xs">
+												Contact Picker API
+											</span>{" "}
+											е експериментална функција и треба
+											да ги следите следните чекори:
+										</p>
+									</div>
+
+									<ol className="space-y-2.5 ml-7">
+										<li className="flex gap-2.5 text-sm leading-relaxed">
+											<span className="flex-shrink-0 w-6 h-6 bg-slate-600 text-white rounded-full flex items-center justify-center text-xs font-semibold">
+												1
+											</span>
+											<span>
+												Одете во{" "}
+												<em className="px-1.5 py-0.5 bg-slate-200 text-slate-700 rounded text-xs font-medium not-italic">
+													Settings
+												</em>{" "}
+												и скролнете надолу до{" "}
+												<em className="px-1.5 py-0.5 bg-slate-200 text-slate-700 rounded text-xs font-medium not-italic">
+													Safari
+												</em>
+												.
+											</span>
+										</li>
+										<li className="flex gap-2.5 text-sm leading-relaxed">
+											<span className="flex-shrink-0 w-6 h-6 bg-slate-600 text-white rounded-full flex items-center justify-center text-xs font-semibold">
+												2
+											</span>
+											<span>
+												Скролнете надолу и изберете{" "}
+												<em className="px-1.5 py-0.5 bg-slate-200 text-slate-700 rounded text-xs font-medium not-italic">
+													Advanced
+												</em>
+												, потоа активирајте ја опцијата{" "}
+												<em className="px-1.5 py-0.5 bg-slate-200 text-slate-700 rounded text-xs font-medium not-italic">
+													Web Inspector
+												</em>
+												.
+											</span>
+										</li>
+										<li className="flex gap-2.5 text-sm leading-relaxed">
+											<span className="flex-shrink-0 w-6 h-6 bg-slate-600 text-white rounded-full flex items-center justify-center text-xs font-semibold">
+												3
+											</span>
+											<span>
+												Отворете го менито{" "}
+												<em className="px-1.5 py-0.5 bg-slate-200 text-slate-700 rounded text-xs font-medium not-italic">
+													Experimental Features (или
+													Feature Flags)
+												</em>{" "}
+												и вклучете ја опцијата{" "}
+												<em className="px-1.5 py-0.5 bg-slate-200 text-slate-700 rounded text-xs font-medium not-italic">
+													Contact Picker API
+												</em>
+												.
+											</span>
+										</li>
+									</ol>
+								</div>
+							</div>
+						</div>
+					)}
+				</div>
 				{/* CrudTable with server-side pagination */}
 				<CrudTable
 					title="Сите Клиенти"

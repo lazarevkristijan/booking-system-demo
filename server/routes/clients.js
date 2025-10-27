@@ -407,12 +407,12 @@ router.delete("/:id", async (req, res) => {
 	try {
 		const { id } = req.params
 		// Check if employee belongs to user's organization
-		const client = await Employee.findOne({
+		const client = await Client.findOne({
 			_id: id,
 			organizationId: req.organizationId,
 		})
 
-		if (!employee) {
+		if (!client) {
 			return res.status(404).json({ error: "Клиентот не е пронајден" })
 		}
 		// Check if client has future bookings
