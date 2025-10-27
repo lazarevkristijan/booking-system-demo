@@ -10,7 +10,7 @@ router.post("/login", async (req, res) => {
 	const { username, password } = req.body
 	const user = await User.findOne({ username }).populate(
 		"organizationId",
-		"name slug isActive timezone bookingInterval"
+		"name slug isActive timezone bookingInterval displayStartTime displayEndTime"
 	)
 
 	if (!user)
@@ -58,7 +58,9 @@ router.post("/login", async (req, res) => {
 			name: user.organizationId.name,
 			slug: user.organizationId.slug,
 			timezone: user.organizationId.timezone || "UTC",
-			bookingInterval: user.organizationId.bookingInterval || 15, // ← ADD THIS
+			bookingInterval: user.organizationId.bookingInterval || 15,
+			displayStartTime: user.organizationId.displayStartTime || "08:00",
+			displayEndTime: user.organizationId.displayEndTime || "20:00",
 		},
 	})
 })
@@ -102,7 +104,10 @@ router.get("/me", async (req, res) => {
 		const decoded = jwt.verify(token, process.env.JWT_SECRET)
 		const user = await User.findById(decoded.id)
 			.select("username role")
-			.populate("organizationId", "name slug timezone bookingInterval")
+			.populate(
+				"organizationId",
+				"name slug timezone bookingInterval displayStartTime displayEndTime"
+			)
 
 		if (!user) {
 			return res.status(404).json({ error: "Корисникот не е пронајден" })
@@ -117,6 +122,9 @@ router.get("/me", async (req, res) => {
 				slug: user.organizationId.slug,
 				timezone: user.organizationId.timezone || "UTC",
 				bookingInterval: user.organizationId.bookingInterval || 15, // ← ADD THIS
+				displayStartTime:
+					user.organizationId.displayStartTime || "08:00",
+				displayEndTime: user.organizationId.displayEndTime || "20:00",
 			},
 		})
 	} catch (err) {

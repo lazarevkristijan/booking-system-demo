@@ -141,12 +141,59 @@ router.put("/:id", requireSuperAdmin, async (req, res) => {
 router.patch("/:id/settings", async (req, res) => {
 	try {
 		const { id } = req.params
-		const { bookingInterval } = req.body
+		const { bookingInterval, displayStartTime, displayEndTime } = req.body
 
 		if (bookingInterval && ![15, 30].includes(bookingInterval)) {
 			return res.status(400).json({
 				error: "Невалиден интервал за часови. Треба да биде 15 или 30 минути.",
 			})
+		}
+
+		// Validate time format
+		const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/
+		if (displayStartTime && !timeRegex.test(displayStartTime)) {
+			return res.status(400).json({
+				error: "Невалиден формат на почетно време. Користете HH:MM формат.",
+			})
+		}
+		if (displayEndTime && !timeRegex.test(displayEndTime)) {
+			return res.status(400).json({
+				error: "Невалиден формат на крајно време. Користете HH:MM формат.",
+			})
+		}
+
+		// Validate that minutes are in 15-minute intervals (00, 15, 30, 45)
+		if (displayStartTime) {
+			const [, startMin] = displayStartTime.split(":").map(Number)
+			if (![0, 15, 30, 45].includes(startMin)) {
+				return res.status(400).json({
+					error: "Почетното време мора да биде на 15-минутни интервали (00, 15, 30, 45).",
+				})
+			}
+		}
+		if (displayEndTime) {
+			const [, endMin] = displayEndTime.split(":").map(Number)
+			if (![0, 15, 30, 45].includes(endMin)) {
+				return res.status(400).json({
+					error: "Крајното време мора да биде на 15-минутни интервали (00, 15, 30, 45).",
+				})
+			}
+		}
+
+		// Validate that start time is before end time
+		if (displayStartTime && displayEndTime) {
+			const [startHour, startMin] = displayStartTime
+				.split(":")
+				.map(Number)
+			const [endHour, endMin] = displayEndTime.split(":").map(Number)
+			const startMinutes = startHour * 60 + startMin
+			const endMinutes = endHour * 60 + endMin
+
+			if (startMinutes >= endMinutes) {
+				return res.status(400).json({
+					error: "Почетното време мора да биде пред крајното време.",
+				})
+			}
 		}
 
 		// Check if user is admin or superadmin
@@ -168,6 +215,10 @@ router.patch("/:id/settings", async (req, res) => {
 		const updateData = {}
 		if (bookingInterval !== undefined)
 			updateData.bookingInterval = bookingInterval
+		if (displayStartTime !== undefined)
+			updateData.displayStartTime = displayStartTime
+		if (displayEndTime !== undefined)
+			updateData.displayEndTime = displayEndTime
 
 		const organization = await Organization.findByIdAndUpdate(
 			id,
