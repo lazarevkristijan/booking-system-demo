@@ -1,6 +1,6 @@
 // client/src/pages/OrganizationSettingsPage.jsx
 import { useState, useEffect } from "react"
-import { Save, Clock } from "lucide-react"
+import { Save, Clock, AlertTriangle } from "lucide-react"
 import { useOrganization } from "../contexts/OrganizationContext"
 import axios from "axios"
 import { SERVER_API } from "../constants"
@@ -95,6 +95,44 @@ export const OrganizationSettingsPage = () => {
 								<div className="text-sm">минути</div>
 							</button>
 						</div>
+
+						{/* ⚠️ ADD THIS WARNING - between the buttons and the current interval display */}
+						{
+							<div className="mt-4 p-4 bg-amber-50 border border-amber-300 rounded-lg">
+								<div className="flex items-start gap-3">
+									<AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+									<div className="flex-1">
+										<p className="text-sm font-semibold text-amber-900 mb-2">
+											Внимание при промена на интервалот
+										</p>
+										<p className="text-sm text-amber-800 mb-2">
+											Промената од 15 на 30 минути ќе
+											значи дека{" "}
+											<strong>
+												нема да можете да креирате нови
+												термини на "непарни" 15-минутни
+												интервали
+											</strong>{" "}
+											(на пр. 10:15, 10:45).
+										</p>
+										<p className="text-sm text-amber-800">
+											<strong>
+												Постоечките термини ќе останат
+												видливи
+											</strong>
+											, но ќе бидат преместени од
+											резервирани (на пр.) во 10:15 и
+											10:45 минути на 10:00 или 10:30
+											минути и нема да можете да закажете
+											нови термини на тие времиња.
+											Размислете дали имате закажани
+											термини на "непарни" времиња пред да
+											ја промените оваа поставка.
+										</p>
+									</div>
+								</div>
+							</div>
+						}
 
 						<div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
 							<p className="text-sm text-green-800">
