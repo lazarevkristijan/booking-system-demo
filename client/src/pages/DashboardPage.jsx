@@ -6,6 +6,7 @@ import {
 	ChevronRight,
 	Clock,
 	User as UserIcon,
+	AlertCircle,
 } from "lucide-react"
 import { BookingModal } from "../components/BookingModal"
 import axios from "axios"
@@ -31,6 +32,8 @@ export const DashboardPage = () => {
 	const [selectedEmployeeId, setSelectedEmployeeId] = useState(null)
 
 	const bookingInterval = organization?.bookingInterval || 15
+	const displayStartTime = organization?.displayStartTime || "08:00"
+	const displayEndTime = organization?.displayEndTime || "20:00"
 
 	const formatDateMK = (date, options = {}) => {
 		const day = date.getDate()
@@ -151,20 +154,23 @@ export const DashboardPage = () => {
 
 	const timeSlots = useMemo(() => {
 		const slots = []
-		const startHour = 8
-		const endHour = 20 // 8 PM
-		const totalMinutes = (endHour - startHour) * 60
-		const slotCount = totalMinutes / bookingInterval
+		const [startHour, startMin] = displayStartTime.split(":").map(Number)
+		const [endHour, endMin] = displayEndTime.split(":").map(Number)
+
+		const startMinutes = startHour * 60 + startMin
+		const endMinutes = endHour * 60 + endMin
+		const totalMinutes = endMinutes - startMinutes
+		const slotCount = Math.floor(totalMinutes / bookingInterval)
 
 		for (let i = 0; i < slotCount; i++) {
-			const totalMins = startHour * 60 + i * bookingInterval
+			const totalMins = startMinutes + i * bookingInterval
 			const hour = Math.floor(totalMins / 60)
 			const minute = totalMins % 60
 			slots.push(`${hour}:${minute.toString().padStart(2, "0")}`)
 		}
 
 		return slots
-	}, [bookingInterval])
+	}, [bookingInterval, displayStartTime, displayEndTime])
 
 	const getWeekDays = (date) => {
 		const week = []
@@ -206,12 +212,45 @@ export const DashboardPage = () => {
 
 		return days
 	}
+	const weekDays = useMemo(() => getWeekDays(selectedDate), [selectedDate])
+	const monthDays = useMemo(() => getMonthDays(selectedDate), [selectedDate])
+
+	// Check for bookings outside visible time range
+	const hiddenBookingsCount = useMemo(() => {
+		if (viewMode !== "day" && viewMode !== "week") return 0
+
+		const [startHour, startMin] = displayStartTime.split(":").map(Number)
+		const [endHour, endMin] = displayEndTime.split(":").map(Number)
+		const startMinutes = startHour * 60 + startMin
+		const endMinutes = endHour * 60 + endMin
+
+		const relevantDays = viewMode === "day" ? [selectedDate] : weekDays
+
+		return bookings.filter((booking) => {
+			const bookingDate = new Date(booking.startTime)
+			const isRelevantDay = relevantDays.some(
+				(day) => day.toDateString() === bookingDate.toDateString()
+			)
+
+			if (!isRelevantDay) return false
+
+			const bookingHour = bookingDate.getHours()
+			const bookingMin = bookingDate.getMinutes()
+			const bookingMinutes = bookingHour * 60 + bookingMin
+
+			return bookingMinutes < startMinutes || bookingMinutes >= endMinutes
+		}).length
+	}, [
+		bookings,
+		viewMode,
+		selectedDate,
+		weekDays,
+		displayStartTime,
+		displayEndTime,
+	])
 
 	const isSameDay = (date1, date2) =>
 		date1?.toDateString() === date2?.toDateString()
-
-	const weekDays = useMemo(() => getWeekDays(selectedDate), [selectedDate])
-	const monthDays = useMemo(() => getMonthDays(selectedDate), [selectedDate])
 
 	const getBookingsForTimeSlot = useCallback(
 		(day, timeSlot, employeeId = null) => {
@@ -501,6 +540,31 @@ export const DashboardPage = () => {
 								</div>
 							</div>
 
+							{/* Hidden Bookings Warning */}
+							{hiddenBookingsCount > 0 && (
+								<div className="px-4 sm:px-6 py-3 bg-amber-50 border-b border-amber-200">
+									<div className="flex items-center gap-2">
+										<AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0" />
+										<p className="text-sm text-amber-800">
+											<strong>
+												{hiddenBookingsCount}
+											</strong>{" "}
+											{hiddenBookingsCount === 1
+												? "термин е"
+												: "термини се"}{" "}
+											надвор од работното време (
+											{displayStartTime} -{" "}
+											{displayEndTime}) и не се прикажува{" "}
+											{hiddenBookingsCount > 1 && "ат"}.{" "}
+											<span className="text-amber-900 font-medium">
+												Можете да ги промените работните
+												часови во Подесувања.
+											</span>
+										</p>
+									</div>
+								</div>
+							)}
+
 							{/* Calendar Grid */}
 							<div className="overflow-x-auto">
 								<div className="min-w-[800px]">
@@ -705,6 +769,32 @@ export const DashboardPage = () => {
 									</button>
 								</div>
 							</div>
+
+							{/* Hidden Bookings Warning */}
+							{hiddenBookingsCount > 0 && (
+								<div className="px-4 sm:px-6 py-3 bg-amber-50 border-b border-amber-200">
+									<div className="flex items-center gap-2">
+										<AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0" />
+										<p className="text-sm text-amber-800">
+											<strong>
+												{hiddenBookingsCount}
+											</strong>{" "}
+											{hiddenBookingsCount === 1
+												? "термин е"
+												: "термини се"}{" "}
+											надвор од работното време (
+											{displayStartTime} -{" "}
+											{displayEndTime}) и не се прикажува
+											{hiddenBookingsCount > 1 &&
+												"ат"}.{" "}
+											<span className="text-amber-900 font-medium">
+												Можете да ги промените работните
+												часови во Подесувања.
+											</span>
+										</p>
+									</div>
+								</div>
+							)}
 
 							{/* Mobile: Employee Selector Boxes */}
 							{allEmployees.length > 1 ? (
