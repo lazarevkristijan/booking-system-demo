@@ -170,6 +170,7 @@ export const ClientsPage = () => {
 					full_name: name,
 					phone: phone,
 				})
+				setShowModal(true)
 				return
 			}
 
