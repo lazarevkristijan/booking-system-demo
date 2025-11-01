@@ -175,7 +175,7 @@ router.delete("/:id", async (req, res) => {
 	try {
 		const { id } = req.params
 
-		const service = await Employee.findOne({
+		const service = await Service.findOne({
 			_id: id,
 			organizationId: req.organizationId,
 		})
